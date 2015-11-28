@@ -1,0 +1,27 @@
+{
+  "name": "craft-starter",
+  "version": "1.0.0",
+  "description": "Starter kit for Craft CMS with gulp and webpack",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ScholtenSeb/craft-starter.git"
+  },
+  "keywords": [
+    "craft",
+    "gulp",
+    "webpack",
+    "twig",
+    "php",
+    "cms"
+  ],
+  "author": "Sebastian Scholten <scholten.seb@gmail.com> (http://scholtenseb.github.io)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ScholtenSeb/craft-starter/issues"
+  },
+  "homepage": "https://github.com/ScholtenSeb/craft-starter#readme"
+}

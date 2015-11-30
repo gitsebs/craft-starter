@@ -1,10 +1,10 @@
 {% extends "_index" %}
 
 {% block content %}
-	<h1>{{ entry.title }}</h1>
+	<h1 class="home click">{{ entry.title }}</h1>
 
   <button id="clickme">click me</button>
-
+	<input type="text" name="name" value="">
 	{{ entry.body }}
 
 {% endblock %}

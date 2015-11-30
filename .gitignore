@@ -1,5 +1,6 @@
 ### Craft CMS ###
 
+assets
 uploads
 build
 
@@ -87,4 +88,3 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
-

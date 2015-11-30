@@ -2,7 +2,7 @@ var clickme = document.querySelector('#clickme')
 
 function logMe(){
   return clickme.addEventListener('click',function(){
-    console.log('you cddslicked the button');
+    console.log('youss clicked the button');
   })
 }
 

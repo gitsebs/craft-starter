@@ -1,0 +1,75 @@
+{%- set showDate = (showDate is defined and showDate ? showDate : null) %}
+{%- set showTime = (showTime is defined and showTime ? showTime : null) %}
+{%- set requiredJs = (requiredJs is defined and requiredJs ? requiredJs : null) %}
+
+<div class="field">
+{% if label or instructions %}
+  <div class="heading">
+    {% if label %}
+      <label{% if required is defined and required %} class="required"{% endif %}>
+        {{- label|raw -}}
+      </label>
+    {% endif %}
+    {% if instructions %}
+      <div class="instructions">{{ instructions|md }}</div>
+    {% endif %}
+  </div>
+{% endif %}
+
+
+{% if showDate %}
+<div class="datewrapper">
+  {%- set dateId = (id is defined and id ? id : 'date-' ~ random()) %}
+  <div class="input">
+    <input
+      type="text"
+      size="10"
+      {%- if dateId is defined %} id="{{ dateId }}"{% endif %}
+      {%- if handle is defined %} name="{{ handle }}[date]"{% endif %}
+      {%- if value is defined %} value="{{ value }}"{% endif %}
+      {%- if required is defined and required %} required {% endif %}>
+  </div>
+</div>
+{% endif %}
+
+{% if showTime %}
+{%- set timeId = (timeId is defined and timeId ? timeId : 'time-' ~ random()) %}
+<div class="timewrapper">
+  <div class="input">
+    <input 
+      type="text"
+      size="10"
+      {%- if timeId is defined %} id="{{ timeId }}"{% endif %}
+      {%- if handle is defined %} name="{{ handle }}[time]"{% endif %}
+      {%- if value is defined %} value="{{ value }}"{% endif %}
+      {%- if required is defined and required %} required {% endif %}>
+  </div>
+</div>
+{% endif %}
+</div>
+
+{%- set js %}
+  {% if requiredJs == 'dateandtime' %}
+  	{% if showDate %}
+  	var $datePicker = $('#{{ dateId }}');
+  	$datePicker.datepicker({
+  		constrainInput: false,
+  		dateFormat: '{{ craft.i18n.datepickerJsFormat }}',
+  		defaultDate: new Date({% if value %}{{ value.year }}, {{ value.month-1 }}, {{ value.day }}{% endif %}),
+  		prevText:   '{{ "Prev"|t|e('js') }}',
+  		nextText:   '{{ "Next"|t|e('js') }}',
+  		firstDay:   {{ currentUser.weekStartDay }},
+  	});
+  	{% endif %}
+
+  	{% if showTime %}
+  	var $timePicker = $('#{{ timeId }}');
+  	$timePicker.timepicker({
+  		timeFormat: '{{ craft.i18n.timepickerJsFormat }}',
+  		closeOnWindowScroll: false,
+  		{% if minuteIncrement is defined %}step: '{{ minuteIncrement }}',{% endif %}
+  	});
+    {% endif %}
+	{% endif %}
+{%- endset %}
+{%- includeJs js %}

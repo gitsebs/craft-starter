@@ -1,7 +1,7 @@
 /*
  Copyright (c) 2014, Pixel & Tonic, Inc.
- @license   http://buildwithcraft.com/license Craft License Agreement
- @see       http://buildwithcraft.com
+ @license   http://craftcms.com/license Craft License Agreement
+ @see       http://craftcms.com
  @package   craft.app.resources
 */
 (function(c){Craft.MatrixInput=Garnish.Base.extend({id:null,blockTypes:null,blockTypesByHandle:null,inputNamePrefix:null,inputIdPrefix:null,maxBlocks:null,showingAddBlockMenu:!1,addBlockBtnGroupWidth:null,addBlockBtnContainerWidth:null,$container:null,$blockContainer:null,$addBlockBtnContainer:null,$addBlockBtnGroup:null,$addBlockBtnGroupBtns:null,blockSort:null,blockSelect:null,totalNewBlocks:0,init:function(a,b,d,f){this.id=a;this.blockTypes=b;this.inputNamePrefix=d;this.inputIdPrefix=Craft.formatInputId(this.inputNamePrefix);

@@ -6,8 +6,8 @@ namespace Craft;
  *
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @copyright Copyright (c) 2014, Pixel & Tonic, Inc.
- * @license   http://buildwithcraft.com/license Craft License Agreement
- * @see       http://buildwithcraft.com
+ * @license   http://craftcms.com/license Craft License Agreement
+ * @see       http://craftcms.com
  * @package   craft.app.services
  * @since     2.0
  */
@@ -234,6 +234,9 @@ class TemplateCacheService extends BaseApplicationComponent
 		{
 			return;
 		}
+
+		// Encode any 4-byte UTF-8 characters
+		$body = StringHelper::encodeMb4($body);
 
 		// Figure out the expiration date
 		if ($duration)

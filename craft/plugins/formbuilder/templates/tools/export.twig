@@ -1,0 +1,40 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+{% hook 'formBuilder2.prepCpTemplate' %}
+
+{% set selectedSubnavItem = "configuration" %}
+{% set bodyClass = 'formbuilder fb-export' %}
+{% set page = 'Export' %}
+
+{% block pageHeader %}
+  {% include 'formbuilder2/partials/header' %}
+{% endblock %}
+
+{% block content %}
+  <section id="fb-content">
+    <header class="page-header">
+      <h1>{{ page|t }}</h1>
+    </header>
+
+    <div class="pane">
+      <div class="backup-forms">
+        <header>
+          <h2>{{ "Export Entries"|t }}</h2>
+          <p>{{ "This will export all entries."|t }}</p>
+        </header>
+        <form method="post" accept-charset="UTF-8">
+          <input type="hidden" name="action" value="formBuilder2/exportAllEntries">
+          <input type="hidden" name="redirect" value="formbuilder2/tools/export">
+          <button type="submit" class="btn submit">{{ "Export"|t }}</button>
+        </form>
+      </div>
+    </div>
+
+  </section>
+
+{% endblock %}
+
+{% set exportImportJs %}
+  
+{% endset %}
+{% includeJs exportImportJs %}

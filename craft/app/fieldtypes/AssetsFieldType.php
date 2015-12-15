@@ -6,8 +6,8 @@ namespace Craft;
  *
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @copyright Copyright (c) 2014, Pixel & Tonic, Inc.
- * @license   http://buildwithcraft.com/license Craft License Agreement
- * @see       http://buildwithcraft.com
+ * @license   http://craftcms.com/license Craft License Agreement
+ * @see       http://craftcms.com
  * @package   craft.app.fieldtypes
  * @since     1.0
  */
@@ -24,11 +24,11 @@ class AssetsFieldType extends BaseElementFieldType
 	protected $elementType = 'Asset';
 
 	/**
-	 * The JS class that should be initialized for the input.
+	 * Whether to allow the “Large Thumbnails” view mode.
 	 *
-	 * @var string|null $inputJsClass
+	 * @var bool $allowLargeThumbsView
 	 */
-	protected $inputJsClass = 'Craft.AssetSelectInput';
+	protected $allowLargeThumbsView = true;
 
 	/**
 	 * Template to use for field rendering.
@@ -36,6 +36,13 @@ class AssetsFieldType extends BaseElementFieldType
 	 * @var string
 	 */
 	protected $inputTemplate = '_components/fieldtypes/Assets/input';
+
+	/**
+	 * The JS class that should be initialized for the input.
+	 *
+	 * @var string|null $inputJsClass
+	 */
+	protected $inputJsClass = 'Craft.AssetSelectInput';
 
 	/**
 	 * Uploaded files that failed validation.
@@ -83,13 +90,16 @@ class AssetsFieldType extends BaseElementFieldType
 		$isMatrix = (strncmp($namespace, 'types[Matrix][blockTypes][', 26) === 0);
 
 		return craft()->templates->render('_components/fieldtypes/Assets/settings', array(
-			'folderOptions'     => $folderOptions,
-			'sourceOptions'     => $sourceOptions,
-			'targetLocaleField' => $this->getTargetLocaleFieldHtml(),
-			'settings'          => $this->getSettings(),
-			'type'              => $this->getName(),
-			'fileKindOptions'   => $fileKindOptions,
-			'isMatrix'          => $isMatrix,
+			'allowLimit'            => $this->allowLimit,
+			'folderOptions'         => $folderOptions,
+			'sourceOptions'         => $sourceOptions,
+			'targetLocaleFieldHtml' => $this->getTargetLocaleFieldHtml(),
+			'viewModeFieldHtml'     => $this->getViewModeFieldHtml(),
+			'settings'              => $this->getSettings(),
+			'defaultSelectionLabel' => $this->getAddButtonLabel(),
+			'type'                  => $this->getName(),
+			'fileKindOptions'       => $fileKindOptions,
+			'isMatrix'              => $isMatrix,
 		));
 	}
 
@@ -125,71 +135,146 @@ class AssetsFieldType extends BaseElementFieldType
 	 */
 	public function prepValueFromPost($value)
 	{
-		// See if we have uploaded file(s).
-		$contentPostLocation = $this->getContentPostLocation();
+		$dataFiles = array();
 
-		if ($contentPostLocation)
+		// Grab data strings
+		if (isset($value['data']) && is_array($value['data']))
 		{
-			$uploadedFiles = UploadedFile::getInstancesByName($contentPostLocation);
-
-			if (!empty($uploadedFiles))
+			foreach ($value['data'] as $index => $dataString)
 			{
-				// See if we have to validate against fileKinds
-				$settings = $this->getSettings();
-
-				if (isset($settings->restrictFiles) && !empty($settings->restrictFiles) && !empty($settings->allowedKinds))
+				if (preg_match('/^data:(?<type>[a-z0-9]+\/[a-z0-9]+);base64,(?<data>.+)/i', $dataString, $matches))
 				{
-					$allowedExtensions = static::_getAllowedExtensions($settings->allowedKinds);
-					$failedFiles = array();
+					$type = $matches['type'];
+					$data = base64_decode($matches['data']);
 
-					foreach ($uploadedFiles as $uploadedFile)
+					if (!$data)
 					{
-						$extension = mb_strtolower(IOHelper::getExtension($uploadedFile->getName()));
-
-						if (!in_array($extension, $allowedExtensions))
-						{
-							$failedFiles[] = $uploadedFile;
-						}
+						continue;
 					}
 
-					// If any files failed the validation, make a note of it.
-					if (!empty($failedFiles))
+					if (!empty($value['filenames'][$index]))
 					{
-						$this->_failedFiles = $failedFiles;
-						return true;
+						$filename = $value['filenames'][$index];
 					}
-				}
-
-				// If we got here either there are no restrictions or all files are valid so let's turn them into Assets
-				$fileIds = array();
-				$targetFolderId = $this->_determineUploadFolderId($settings);
-
-				if (!empty($targetFolderId))
-				{
-					foreach ($uploadedFiles as $file)
+					else
 					{
-						$tempPath = AssetsHelper::getTempFilePath($file->getName());
-						move_uploaded_file($file->getTempName(), $tempPath);
-						$response = craft()->assets->insertFileByLocalPath($tempPath, $file->getName(), $targetFolderId);
-						$fileIds[] = $response->getDataItem('fileId');
-						IOHelper::deleteFile($tempPath, true);
+						$extension = FileHelper::getExtensionByMimeType($type);
+						$filename = 'Uploaded file.'.$extension;
 					}
 
-					if (is_array($value) && is_array($fileIds))
-					{
-						$fileIds = array_merge($value, $fileIds);
-					}
-
-					// Make it look like the actual POST data contained these file IDs as well,
-					// so they make it into entry draft/version data
-					$this->element->setRawPostContent($this->model->handle, $fileIds);
-
-					return $fileIds;
+					$dataFiles[] = array(
+						'filename' => $filename,
+						'data' => $data
+					);
 				}
 			}
 		}
 
-		return parent::prepValueFromPost($value);
+		// Remove these so they don't interfere.
+		if (isset($value['data']) && isset($value['filenames']))
+		{
+			unset($value['data'], $value['filenames']);
+		}
+
+		$uploadedFiles = array();
+
+		// See if we have uploaded file(s).
+		$contentPostLocation = $this->getContentPostLocation();
+
+		if ($contentPostLocation) {
+			$files = UploadedFile::getInstancesByName($contentPostLocation);
+
+			foreach ($files as $file)
+			{
+				$uploadedFiles[] = array(
+					'filename' => $file->getName(),
+					'location' => $file->getTempName()
+				);
+			}
+		}
+
+		// See if we have to validate against fileKinds
+		$settings = $this->getSettings();
+
+		$allowedExtensions = false;
+
+		if (isset($settings->restrictFiles) && !empty($settings->restrictFiles) && !empty($settings->allowedKinds))
+		{
+			$allowedExtensions = static::_getAllowedExtensions($settings->allowedKinds);
+		}
+
+		if (is_array($allowedExtensions))
+		{
+			foreach ($dataFiles as $file)
+			{
+				$extension = StringHelper::toLowerCase(IOHelper::getExtension($file['filename']));
+
+				if (!in_array($extension, $allowedExtensions))
+				{
+					$this->_failedFiles[] = $file['filename'];
+				}
+			}
+
+			foreach ($uploadedFiles as $file)
+			{
+				$extension = StringHelper::toLowerCase(IOHelper::getExtension($file['filename']));
+
+				if (!in_array($extension, $allowedExtensions))
+				{
+					$this->_failedFiles[] = $file['filename'];
+				}
+			}
+		}
+
+		if (!empty($this->_failedFiles))
+		{
+			return true;
+		}
+
+		// If we got here either there are no restrictions or all files are valid so let's turn them into Assets
+		// Unless there are no files at all.
+		if (empty($value) && empty($dataFiles) && empty($uploadedFiles))
+		{
+			return array();
+		}
+
+		if (empty($value))
+		{
+			$value = array();
+		}
+
+		$fileIds = array();
+
+		if (!empty($dataFiles) || !empty($uploadedFiles))
+		{
+			$targetFolderId = $this->_determineUploadFolderId($settings);
+
+			foreach ($dataFiles as $file)
+			{
+				$tempPath = AssetsHelper::getTempFilePath($file['filename']);
+				IOHelper::writeToFile($tempPath, $file['data']);
+				$response = craft()->assets->insertFileByLocalPath($tempPath, $file['filename'], $targetFolderId);
+				$fileIds[] = $response->getDataItem('fileId');
+				IOHelper::deleteFile($tempPath, true);
+			}
+
+			foreach ($uploadedFiles as $file)
+			{
+				$tempPath = AssetsHelper::getTempFilePath($file['filename']);
+				move_uploaded_file($file['location'], $tempPath);
+				$response = craft()->assets->insertFileByLocalPath($tempPath, $file['filename'], $targetFolderId);
+				$fileIds[] = $response->getDataItem('fileId');
+				IOHelper::deleteFile($tempPath, true);
+			}
+		}
+
+		$fileIds = array_merge($value, $fileIds);
+
+		// Make it look like the actual POST data contained these file IDs as well,
+		// so they make it into entry draft/version data
+		$this->element->setRawPostContent($this->model->handle, $fileIds);
+
+		return $fileIds;
 	}
 
 	/**
@@ -307,7 +392,7 @@ class AssetsFieldType extends BaseElementFieldType
 
 		foreach ($this->_failedFiles as $file)
 		{
-			$errors[] = Craft::t('"{filename}" is not allowed in this field.', array('filename' => $file->getName()));
+			$errors[] = Craft::t('"{filename}" is not allowed in this field.', array('filename' => $file));
 		}
 
 		if ($errors)

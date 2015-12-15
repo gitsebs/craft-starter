@@ -1,0 +1,127 @@
+{% extends "_layouts/cp" %}
+{% hook 'formBuilder2.prepCpTemplate' %}
+
+{% set selectedSubnavItem = "entries" %}
+{% set bodyClass = 'formbuilder fb-entries' %}
+{% set page = 'Entry' %}
+
+{% block pageHeader %}
+  {% include 'formbuilder2/partials/header' %}
+{% endblock %}
+
+{% block content %}
+  <section id="fb-content">
+    <header class="page-header">
+      <h1>{{ page|t }}</h1>
+    </header>
+
+    <div class="view-entry">
+
+      <div class="pane submission-details">
+        <header>
+          <h1>{{ "Submission Details"|t }}</h1>
+          <p>{{ "Form ID"|t }}: <span>{{ form.id }}</span></p>
+          <p>{{ "Form Name"|t }}: <span>{{ form.name }}</span></p>
+          <p>{{ "Submission ID"|t }}: <span>{{ entry.id }}</span></p>
+          <p>{{ "Submission Date"|t }}: <span>{{ entry.dateCreated | date('F jS, Y') }} at {{ entry.dateCreated | date('g:h A') }}</span></p>
+        </header>
+      </div>
+
+      {% if submission %}
+      <div class="pane submission-details">
+        <header>
+          <h1>{{ "Submission Content"|t }}</h1>
+        </header>
+
+        <table class="submission fullwidth collapsible">
+          {% for name, value in submission %}
+            {% set field = craft.fields.getFieldByHandle(name) %}
+            {% if value %}
+            <tr>
+              <td style="padding-top:10px;"><strong>{{ field.name }}</strong></td>
+              {% if value | checkArray == '1' %}
+                <td style="padding-top:10px;">
+                {% for key, item in value %}
+                  <span class="item">{{ item }}</span>
+                {% endfor %}
+                </td>
+              {% else %}
+                <td style="padding-top:10px;">{{ value|raw|nl2br }}</td>
+              {% endif %}
+            </tr>
+            {% endif %}
+          {% endfor %}
+        </table>
+      </div>
+      {% else %}
+        <p class="no-content">{{ "Submission has no content."|t }}</p>
+      {% endif %}
+
+      {% if files %}
+        <div class="pane upload-details">
+          <header>
+            <h1>{{ "Form Uploads"|t }}</h1>
+          </header>
+          <div class="files">
+            {% for file in files %}
+              {# {{ file|inspect }} #}
+              <div class="file">
+                {% if file.kind == 'image' %}
+                  <div class="icon">
+                    <a href="{{ file.getUrl() }}" target="_blank"><img src="{{ file.getUrl() }}" /></a>
+                  </div>
+                  <div class="details">
+                    <p class="item">Name: <a href="{{ file.getUrl() }}" target="_blank">{{ file.title }}</a></p>
+                    <p class="item">Dimensions: <span>{{ file.width }}x{{ file.height }}</span></p>
+                    <p class="item">File Size: <span>{{ file.size|filesize }}</span></p>
+                  </div>
+
+                {% elseif file.kind == 'compressed' %}
+                  <div class="icon">
+                    <a href="{{ file.getUrl() }}" target="_blank" class="compressed"><svg class="icon"><use xlink:href="#icon-zip" class="icon-zip"/></svg></a>
+                  </div>
+                  <div class="details">
+                    <p class="item">Name: <a href="{{ file.getUrl() }}" target="_blank">{{ file.title }}</a></p>
+                    <p class="item">File Size: <span>{{ file.size|filesize }}</span></p>
+                  </div>
+
+                {% elseif file.kind == 'word' %}
+                  <div class="icon">
+                    <a href="{{ file.getUrl() }}" target="_blank" class="document"><svg class="icon"><use xlink:href="#icon-doc" class="icon-doc"/></svg></a>
+                  </div>
+                  <div class="details">
+                    <p class="item">Name: <a href="{{ file.getUrl() }}" target="_blank">{{ file.title }}</a></p>
+                    <p class="item">File Size: <span>{{ file.size|filesize }}</span></p>
+                  </div>
+                {% elseif file.kind == 'pdf' %}
+                  <div class="icon">
+                    <a href="{{ file.getUrl() }}" target="_blank" class="pdf"><svg class="icon"><use xlink:href="#icon-pdf" class="icon-pdf"/></svg></a>
+                  </div>
+                  <div class="details">
+                    <p class="item">Name: <a href="{{ file.getUrl() }}" target="_blank">{{ file.title }}</a></p>
+                    <p class="item">File Size: <span>{{ file.size|filesize }}</span></p>
+                  </div>
+                {% else %}
+                  <a href="{{ file.getUrl() }}" target="_blank">{{ file.title() }}</a>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+
+    <div>
+      <form method="post" accept-charset="utf-8">
+        <input type="hidden" name="action" value="formBuilder2/entry/deleteSubmission">
+        <input type="hidden" name="redirect" value="formbuilder2/entries">
+        <input type="hidden" name="entryId" value="{{ entry.id }}">
+        <button class="btn delete submit">{{ "Delete Submission"|t }}</button>
+      </form>
+    </div>
+
+  </section>
+
+{% endblock %}
+

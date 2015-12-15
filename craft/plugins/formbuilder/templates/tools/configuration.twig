@@ -1,0 +1,52 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+{% hook 'formBuilder2.prepCpTemplate' %}
+
+{% set selectedSubnavItem = "configuration" %}
+{% set bodyClass = 'formbuilder fb-configuration' %}
+{% set page = 'Configuration' %}
+
+{% block pageHeader %}
+  {% include 'formbuilder2/partials/header' %}
+{% endblock %}
+
+{% block content %}
+  <section id="fb-content">
+    <header class="page-header">
+      <h1>{{ page|t }}</h1>
+    </header>
+
+    <div>
+      <ul>
+        <li>{{ "Name"|t }}: <span>{{ plugin.getName() }}</span></li>
+        <li>{{ "Version"|t }}: <span>{{ plugin.getVersion() }}</span></li>
+        <li>{{ "Developer"|t }}: <span><a href="{{ plugin.getDeveloperUrl() }}" target="_blank">{{ plugin.getDeveloper() }}</a></span></li>
+        <li>{{ "Author"|t }}: <span><a href="https://github.com/owldesign" target="_balank" title="Vadim Goncharov">Vadim Goncharov</a> (<a href="https://twitter.com/owldesign" target="_blank">@owldesign</a>)</span></li>
+        <li>{{ "View Documentation"|t }}: <span><a href="{{ plugin.getDocumentationUrl() }}" target="_blank">GitHub</a></span></li>
+      </ul>
+    </div>
+
+  </section>
+
+{% endblock %}
+
+{% set configJs %}
+
+
+ {#  var myModal = Craft.createElementSelectorModal('Asset', {
+    resizable:          true,
+    storageKey:         'someUniqueID',
+    criteria:           { status: null },
+    multiSelect:        false,
+    disableOnSelect:    true,
+    onCancel:           function(){},
+    onSelect:           function(asset){
+      console.log(asset[0].url);
+    }
+  });
+
+  $('.add').on('click', function(e){
+    myModal.show();
+  }); #}
+{% endset %}
+{% includeJs configJs %}

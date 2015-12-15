@@ -1,0 +1,14 @@
+{% includeCssResource "formbuilder2/css/formbuilder2.css" %}
+{% includeCssResource "formbuilder2/css/font-awesome.css" %}
+{% includeJsResource "formbuilder2/js/plugins.js" %}
+{% includeJsResource "formbuilder2/js/formbuilder2.js" %}
+{% include 'formbuilder2/partials/svgs.html' %} 
+
+{# Logo #}
+<div class="logo">
+  <a href="{{ url('formbuilder2') }}">
+    <h1><svg><use xlink:href="#formbuilder2-logo" /></svg></h1>
+    {# <h1>Form<span class="second">Builder</span><span class="number">2</span></h1> #}
+    <span class="subhead">{{ "Simply Forms Manager"|t }}</span>
+  </a>
+</div>

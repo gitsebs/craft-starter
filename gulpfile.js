@@ -70,7 +70,7 @@ gulp.task('image', function () {
 
 gulp.task('browser-sync', ['sass'], function() {
   var proxy = proxyMiddleware(['**', '!/assets/**'], {
-      target: 'http://redefine.dev',
+      target: 'http://craft.dev',
       autoRewrite: true,
       changeOrigin: true,
   })
@@ -89,7 +89,15 @@ gulp.task('browser-sync', ['sass'], function() {
         middleware: [ proxy, webpackDev ]
     },
     // tunnel: true,
-    open: false
+    open: false,
+    rewriteRules: [
+      {
+        match: /craft\.dev/g,
+        fn: function (match) {
+          return 'localhost:3000';
+        }
+      }
+    ]
   })
 
 

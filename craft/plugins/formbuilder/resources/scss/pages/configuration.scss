@@ -1,0 +1,33 @@
+/* ============================================ *
+ * Configuration
+ * ============================================ */
+
+.fb-configuration {
+
+  #fb-content {
+    min-height: 600px;
+    & > .pane {
+      @include align-items(stretch);
+      @include display(flex);
+      @include flex-direction(row);
+      @include justify-content(flex-start);
+    }
+    
+    // Settings
+    .settings {
+      width: 400px;
+      input[type="text"] {
+        width: 100%;
+      }
+    }
+    
+    // Information
+    .information {
+      li span {
+        font-weight: 700;
+      }
+    }
+  }
+
+  
+}

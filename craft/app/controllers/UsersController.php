@@ -12,8 +12,8 @@ namespace Craft;
  *
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @copyright Copyright (c) 2014, Pixel & Tonic, Inc.
- * @license   http://buildwithcraft.com/license Craft License Agreement
- * @see       http://buildwithcraft.com
+ * @license   http://craftcms.com/license Craft License Agreement
+ * @see       http://craftcms.com
  * @package   craft.app.controllers
  * @since     1.0
  */
@@ -281,7 +281,7 @@ class UsersController extends BaseController
 	 */
 	public function actionSetPassword()
 	{
-		// Have they just submitted a password, or are we just displaying teh page?
+		// Have they just submitted a password, or are we just displaying the page?
 		if (!craft()->request->isPostRequest())
 		{
 			if ($info = $this->_processTokenRequest())
@@ -527,6 +527,7 @@ class UsersController extends BaseController
 		// ---------------------------------------------------------------------
 
 		$statusActions = array();
+		$loginActions = array();
 		$sketchyActions = array();
 
 		if (craft()->getEdition() >= Craft::Client && !$variables['isNewAccount'])
@@ -589,6 +590,11 @@ class UsersController extends BaseController
 
 			if (!$variables['account']->isCurrent())
 			{
+				if (craft()->userSession->isAdmin())
+				{
+					$loginActions[] = array('action' => 'users/impersonate', 'label' => Craft::t('Login as {user}', array('user' => $variables['account']->getName())));
+				}
+
 				if (craft()->userSession->checkPermission('administrateUsers') && $variables['account']->getStatus() != UserStatus::Suspended)
 				{
 					$sketchyActions[] = array('action' => 'users/suspendUser', 'label' => Craft::t('Suspend'));
@@ -614,6 +620,11 @@ class UsersController extends BaseController
 		if ($pluginActions)
 		{
 			$variables['actions'] = array_merge($variables['actions'], array_values($pluginActions));
+		}
+
+		if ($loginActions)
+		{
+			array_push($variables['actions'], $loginActions);
 		}
 
 		if ($sketchyActions)
@@ -644,39 +655,36 @@ class UsersController extends BaseController
 			$variables['title'] = Craft::t("Register a new user");
 		}
 
-		// Show tabs if they have Craft Pro
 		// ---------------------------------------------------------------------
+		$variables['selectedTab'] = 'account';
 
-		if (craft()->getEdition() == Craft::Pro)
-		{
-			$variables['selectedTab'] = 'account';
-
-			$variables['tabs'] = array(
+		$variables['tabs'] = array(
 				'account' => array(
-					'label' => Craft::t('Account'),
-					'url'   => '#account',
+						'label' => Craft::t('Account'),
+						'url'   => '#account',
 				)
-			);
+		);
 
-			// No need to show the Profile tab if it's a new user (can't have an avatar yet) and there's no user fields.
-			if (!$variables['isNewAccount'] || $variables['account']->getFieldLayout()->getFields())
-			{
-				$variables['tabs']['profile'] = array(
+		// No need to show the Profile tab if it's a new user (can't have an avatar yet) and there's no user fields.
+		if (!$variables['isNewAccount'] || (craft()->getEdition() == Craft::Pro && $variables['account']->getFieldLayout()->getFields()))
+		{
+			$variables['tabs']['profile'] = array(
 					'label' => Craft::t('Profile'),
 					'url'   => '#profile',
-				);
-			}
+			);
+		}
 
-			// If they can assign user groups and permissions, show the Permissions tab
-			if (craft()->userSession->getUser()->can('assignUserPermissions'))
-			{
-				$variables['tabs']['perms'] = array(
+		// Show the permission tab for the users that can change them on Craft Pro editions.
+		if (craft()->getEdition() == Craft::Pro && craft()->userSession->getUser()->can('assignUserPermissions'))
+		{
+			$variables['tabs']['perms'] = array(
 					'label' => Craft::t('Permissions'),
 					'url'   => '#perms',
-				);
-			}
+			);
 		}
-		else
+
+		// Just one tab looks awkward, so just don't show them at all then.
+		if (count($variables['tabs']) == 1)
 		{
 			$variables['tabs'] = array();
 		}
@@ -1059,13 +1067,20 @@ class UsersController extends BaseController
 		}
 
 		// Upload the file and drop it in the temporary folder
-		$file = $_FILES['image-upload'];
+		$file = UploadedFile::getInstanceByName('image-upload');
 
 		try
 		{
 			// Make sure a file was uploaded
-			if (!empty($file['name']) && !empty($file['size'])  )
+			if ($file)
 			{
+				$fileName = AssetsHelper::cleanAssetName($file->getName());
+
+				if (!ImageHelper::isImageManipulatable($file->getExtensionName()))
+				{
+					throw new Exception(Craft::t('The uploaded file is not an image.'));
+				}
+
 				$user = craft()->users->getUserById($userId);
 				$userName = AssetsHelper::cleanAssetName($user->username, false);
 
@@ -1074,9 +1089,8 @@ class UsersController extends BaseController
 				IOHelper::clearFolder($folderPath);
 
 				IOHelper::ensureFolderExists($folderPath);
-				$fileName = AssetsHelper::cleanAssetName($file['name']);
 
-				move_uploaded_file($file['tmp_name'], $folderPath.$fileName);
+				move_uploaded_file($file->getTempName(), $folderPath.$fileName);
 
 				// Test if we will be able to perform image actions on this image
 				if (!craft()->images->checkMemoryForImage($folderPath.$fileName))
@@ -1085,40 +1099,21 @@ class UsersController extends BaseController
 					$this->returnErrorJson(Craft::t('The uploaded image is too large'));
 				}
 
+				craft()->images->
+					loadImage($folderPath.$fileName)->
+					scaleToFit(500, 500, false)->
+					saveAs($folderPath.$fileName);
+
 				list ($width, $height) = ImageHelper::getImageSize($folderPath.$fileName);
-
-				if (IOHelper::getExtension($fileName) != 'svg')
-				{
-					craft()->images->cleanImage($folderPath.$fileName);
-				}
-				else
-				{
-					// Resave svg files as png
-					$newFilename = preg_replace('/\.svg$/i', '.png', $fileName);
-
-					craft()->images->
-						loadImage($folderPath.$fileName, $width, $height)->
-						saveAs($folderPath.$newFilename);
-
-					IOHelper::deleteFile($folderPath.$fileName);
-					$fileName = $newFilename;
-				}
-
-				$constraint = 500;
 
 				// If the file is in the format badscript.php.gif perhaps.
 				if ($width && $height)
 				{
-					// Never scale up the images, so make the scaling factor always <= 1
-					$factor = min($constraint / $width, $constraint / $height, 1);
-
 					$html = craft()->templates->render('_components/tools/cropper_modal',
 						array(
 							'imageUrl' => UrlHelper::getResourceUrl('userphotos/temp/'.$userName.'/'.$fileName),
-							'width' => round($width * $factor),
-							'height' => round($height * $factor),
-							'factor' => $factor,
-							'constraint' => $constraint,
+							'width' => $width,
+							'height' => $height,
 							'fileName' => $fileName
 						)
 					);
@@ -1129,7 +1124,7 @@ class UsersController extends BaseController
 		}
 		catch (Exception $exception)
 		{
-			Craft::log('There was an error uploading the photo: '.$exception->getMessage(), LogLevel::Error);
+			$this->returnErrorJson($exception->getMessage());
 		}
 
 		$this->returnErrorJson(Craft::t('There was an error uploading your photo.'));
@@ -1165,11 +1160,6 @@ class UsersController extends BaseController
 
 			$user = craft()->users->getUserById($userId);
 			$userName = AssetsHelper::cleanAssetName($user->username, false);
-
-			if (IOHelper::getExtension($source) == 'svg')
-			{
-				$source = preg_replace('/\.svg$/i', '.png', $source);
-			}
 
 			// make sure that this is this user's file
 			$imagePath = craft()->path->getTempUploadsPath().'userphotos/'.$userName.'/'.$source;
@@ -1637,7 +1627,7 @@ class UsersController extends BaseController
 			$verticalMargin = ($imageHeight - $dimension) / 2;
 			$image->crop($horizontalMargin, $imageWidth - $horizontalMargin, $verticalMargin, $imageHeight - $verticalMargin);
 
-			craft()->users->saveUserPhoto($userPhoto->getName(), $image, $user);
+			craft()->users->saveUserPhoto(AssetsHelper::cleanAssetName($userPhoto->getName()), $image, $user);
 
 			IOHelper::deleteFile($userPhoto->getTempName());
 		}

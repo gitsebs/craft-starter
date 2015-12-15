@@ -6,8 +6,8 @@ namespace Craft;
  *
  * @author     Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @copyright  Copyright (c) 2014, Pixel & Tonic, Inc.
- * @license    http://buildwithcraft.com/license Craft License Agreement
- * @see        http://buildwithcraft.com
+ * @license    http://craftcms.com/license Craft License Agreement
+ * @see        http://craftcms.com
  * @package    craft.app.services
  * @since      1.0
  * @deprecated This class will have several breaking changes in Craft 3.0.
@@ -617,6 +617,7 @@ class AssetTransformsService extends BaseApplicationComponent
 	 * @param $fileModel
 	 * @param $size
 	 *
+	 * @throws Exception
 	 * @return bool|string
 	 */
 	public function getThumbServerPath(AssetFileModel $fileModel, $size)
@@ -632,8 +633,8 @@ class AssetTransformsService extends BaseApplicationComponent
 		{
 			$imageSource = $this->getLocalImageSource($fileModel);
 
-			craft()->images->loadImage($imageSource, $size, $size)
-				->scaleAndCrop($size, $size)
+			craft()->images->loadImage($imageSource)
+				->scaleToFit($size)
 				->saveAs($thumbPath);
 
 			if (craft()->assetSources->populateSourceType($fileModel->getSource())->isRemote())
@@ -744,14 +745,21 @@ class AssetTransformsService extends BaseApplicationComponent
 		if ($maxCachedImageSize > 0 && ImageHelper::isImageManipulatable($localCopy))
 		{
 
-			craft()->images->loadImage($localCopy, $maxCachedImageSize, $maxCachedImageSize)
-				->scaleToFit($maxCachedImageSize, $maxCachedImageSize)
-				->setQuality(100)
-				->saveAs($destination);
+			$image = craft()->images->loadImage($localCopy);
+
+			if ($image instanceof Image)
+			{
+				$image->setQuality(100);
+			}
+
+			$image->scaleToFit($maxCachedImageSize, $maxCachedImageSize)->saveAs($destination);
 		}
 		else
 		{
-			IOHelper::copyFile($localCopy, $destination);
+			if ($localCopy != $destination)
+			{
+				IOHelper::copyFile($localCopy, $destination);
+			}
 		}
 	}
 
@@ -992,9 +1000,9 @@ class AssetTransformsService extends BaseApplicationComponent
 	private function _getUnnamedTransformFolderName(AssetTransformModel $transform)
 	{
 		return '_'.($transform->width ? $transform->width : 'AUTO').'x'.($transform->height ? $transform->height : 'AUTO') .
-			'_'.($transform->mode) .
-			'_'.($transform->position) .
-			($transform->quality ? '_'.$transform->quality : '');
+		'_'.($transform->mode) .
+		'_'.($transform->position) .
+		($transform->quality ? '_'.$transform->quality : '');
 	}
 
 	/**
@@ -1036,8 +1044,19 @@ class AssetTransformsService extends BaseApplicationComponent
 		$imageSource = $file->getTransformSource();
 		$quality = $transform->quality ? $transform->quality : craft()->config->get('defaultImageQuality');
 
-		$image = craft()->images->loadImage($imageSource, $transform->width, $transform->height);
-		$image->setQuality($quality);
+		if (StringHelper::toLowerCase($file->getExtension()) == 'svg' && $index->detectedFormat != 'svg')
+		{
+			$image = craft()->images->loadImage($imageSource, true, max($transform->width, $transform->height));
+		}
+		else
+		{
+			$image = craft()->images->loadImage($imageSource);
+		}
+
+		if ($image instanceof Image)
+		{
+			$image->setQuality($quality);
+		}
 
 		switch ($transform->mode)
 		{
@@ -1087,11 +1106,6 @@ class AssetTransformsService extends BaseApplicationComponent
 		// For non-web-safe formats we go with jpg.
 		if (!in_array(mb_strtolower(IOHelper::getExtension($file->filename)), ImageHelper::getWebSafeFormats()))
 		{
-			if ($file->getExtension() == 'svg' && craft()->images->isImagick())
-			{
-				return 'png';
-			}
-
 			return 'jpg';
 		}
 		else

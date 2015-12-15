@@ -1,0 +1,35 @@
+{% extends "_layouts/cp" %}
+{% hook 'formBuilder2.prepCpTemplate' %}
+
+{% set selectedSubnavItem = "dashboard" %}
+{% set bodyClass = 'formbuilder fb-dashboard' %}
+{% set page = 'Dashboard' %}
+
+{% block pageHeader %}
+  {% include 'formbuilder2/partials/header' %}
+{% endblock %}
+
+{% block content %}
+  {% set formsCount = craft.formBuilder2.totalForms() %}
+  {% set entriesCount = craft.formBuilder2.totalEntries() %}
+
+  <section id="fb-content">
+    <header class="page-header">
+      <h1>{{ page|t }}</h1>
+    </header>
+
+    <div>
+      <div class="overview">
+        <div class="item">
+          <h2>{{ formsCount }}</h2>
+          <p>{{ "Forms Created"|t }}</p>
+        </div>
+        <div class="item">
+          <h2>{{ entriesCount }}</h2>
+          <p>{{ "Submitted Entries"|t }}</p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+{% endblock %}

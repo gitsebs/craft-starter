@@ -1,0 +1,61 @@
+/* ============================================ *
+ * Entries
+ * ============================================ */
+
+.fb-entries {
+  
+  #crumbs li:last-child {
+    &:after { content: ""; }
+  }
+
+  // View Entry
+  .view-entry {
+    .submission-details, .upload-details  {
+      h1 { color: $c-blue; margin-bottom: 10px; }
+      p { margin: 0; padding: 0; }
+      span { font-weight: 700; }
+    }
+
+    .submission-details {
+      margin-bottom: 30px !important;
+    }
+
+    .no-content { margin-bottom: 30px; }
+  }
+
+  // File Uploads
+  .upload-details {
+    .file {
+      padding: 15px 15px 15px 0;
+      margin: 0 5px;
+      border-bottom: 1px solid rgba(gray, .2);
+      @include clearfix;
+      @include transition(all .3s ease);
+      &:last-child { border-bottom: none; }
+      &:hover { background: darken(white, 2); }
+      img { 
+        display: block;
+        margin: 0 auto;
+        width: 90%; 
+      }
+      .icon {
+        float: left;
+        width: 100px;
+        margin-right: 10px;
+      }
+      .details {
+        a {
+          color: $c-teal;
+          text-decoration: none;
+          &:hover { color: $c-blue; }
+        }
+      }
+      .compressed, .document, .pdf {
+        svg {
+          @include size(80px 40px);
+          * { fill: $c-blue; @include transition(all .3s ease);}
+        }
+      }
+    }
+  }
+}

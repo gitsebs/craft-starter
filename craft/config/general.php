@@ -1,33 +1,26 @@
 <?php
 
-/**
- * General Configuration
- *
- * All of your system's general configuration settings go in here.
- * You can see a list of the default settings in craft/app/etc/config/defaults/general.php
- */
-
 return array(
   '*' => array(
-    // 'enableCsrfProtection' => true,
+    'enableCsrfProtection' => true,
     'limitAutoSlugsToAscii' => true,
     'omitScriptNameInUrls' => true,
     'errorTemplatePrefix' => "_errors/",
     'convertFilenamesToAscii' => true,
     'testToEmailAddress' => 'me@example.com',
   ),
-  '.dev' => array(
+  'craft.dev' => array(
     'devMode' => true,
-    'siteUrl' => '//redefine.dev',
+    'siteUrl' => 'http://craft.dev/',
     'environmentVariables' => array(
-      'baseAssetUrl'  => '//redefine.dev/',
+      'baseAssetUrl'  => 'http://craft.dev',
       'baseAssetPath' => '',
     ),
   ),
-  '.co.za' => array(
-    'siteUrl' => '//redefine.co.za',
+  '.domain' => array(
+    'siteUrl' => '//domain',
     'environmentVariables' => array(
-      'baseAssetUrl'  => '//redefine.co.za/',
+      'baseAssetUrl'  => '//domain/',
       'baseAssetPath' => '',
     ),
   )

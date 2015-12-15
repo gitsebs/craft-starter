@@ -1,0 +1,25 @@
+{%- set id = (id is defined and id ? id : 'lightswitch-'~random()) %}
+
+<div class="field">
+	{% if label or instructions %}
+	  <div class="heading">
+	    {% if label %}
+	      <label{% if required is defined and required %} class="required"{% endif %}{% if id %} for="{{ id }}"{% endif %}>
+	        {{- label|raw -}}
+	      </label>
+	    {% endif %}
+	    {% if instructions %}
+	      <div class="instructions">{{ instructions|md }}</div>
+	    {% endif %}
+	  </div>
+	{% endif %}
+	<div class="input">
+	  <input 
+	  	type="checkbox" 
+	  	id="{{ id }}" 
+	  	class="switch switch-round" 
+	  	{%- if on is defined and on %} checked {% endif %}
+	  	{%- if handle is defined %} name="{{ handle }}"{% endif %}>
+	  <label for="{{ id }}"></label>
+	</div>
+</div>

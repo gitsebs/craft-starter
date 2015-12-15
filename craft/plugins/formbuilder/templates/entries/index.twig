@@ -1,0 +1,26 @@
+{% extends "_layouts/elementindex" %}
+{% hook 'formBuilder2.prepCpTemplate' %}
+
+{% set title = "Entries"|t %}
+{% set elementType = 'FormBuilder2' %}
+{% set selectedSubnavItem = "entries" %}
+{% set bodyClass = 'formbuilder fb-entries' %}
+{% set page = 'Entries' %}
+
+{% block pageHeader %}
+  {% include 'formbuilder2/partials/header' %}
+{% endblock %}
+
+{% block sidebar %}
+  <h2>Forms</h2>
+  {{ parent() }}
+{% endblock %}
+
+
+{% block content %}
+  {{ parent() }}
+{% endblock %}
+
+{% if sectionHandle is defined %}
+  {% includejs 'window.defaultSectionHandle = "'~sectionHandle~'";' %}
+{% endif %}

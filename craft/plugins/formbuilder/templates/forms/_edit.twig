@@ -1,0 +1,475 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+{% hook 'formBuilder2.prepCpTemplate' %}
+
+{% set selectedSubnavItem = "forms" %}
+{% set bodyClass = 'formbuilder fb-new-form' %}
+{% set pageSlug = craft.request.lastSegment %}
+
+{% if pageSlug == 'edit' %}
+  {% set page = 'Edit Form' %}
+{% else %}
+  {% set page = 'New Form' %}
+{% endif %}
+
+{% block pageHeader %}
+  {% include 'formbuilder2/partials/header' %}
+{% endblock %}
+
+{% block content %}
+  <section id="fb-content">
+    <header class="page-header">
+      <h1>{{ page|t }}</h1>
+    </header>
+
+    <div class="forms">
+      <form method="post" accept-charset="UTF-8" data-saveshortcut="1">
+        <input type="hidden" name="action" value="formBuilder2/form/saveForm">
+        <input type="hidden" name="redirect" value="formbuilder2/forms">
+
+        {% if form.id %}<input type="hidden" name="formId" value="{{ form.id }}">{% endif %}
+        
+        <div class="menu-tabs">
+          <h2 class="current tab-toggle-form-settings"><a href="#form-settings">{{ "Form Settings"|t }}</a></h2>
+          <h2 class="tab-toggle-spam-protection"><a href="#spam-protection">{{ "Spam Protection"|t }}</a></h2>
+          <h2 class="tab-toggle-messages"><a href="#messages">{{ "Messages"|t }}</a></h2>
+          <h2 class="tab-toggle-notify"><a href="#notify">{{ "Email Notifications"|t }}</a></h2>
+          <h2 class="tab-toggle-fields"><a href="#fields">{{ "Fields"|t }}</a></h2>
+        </div>
+
+        <div class="tabs-container">
+
+          <div id="form-settings" class="tab-content">
+            {% set ajaxUploadErrors = form.getErrors('cannotUseFileUploadAndAjax') %}
+
+            {{ forms.textField({
+              first: true,
+              label: "Form Name"|t,
+              instructions: "Give this form a name."|t,
+              id: 'name',
+              name: 'name',
+              value: form.name,
+              errors: form.getErrors('name'),
+              autofocus: true,
+              required: true,
+              size: 50,
+              translatable: true
+            }) }}
+
+            {{ forms.textField({
+              label: "Handle"|t,
+              instructions: "How you’ll refer to this form in the templates."|t,
+              id: 'handle',
+              class: 'code',
+              name: 'handle',
+              value: form.handle,
+              size: 50,
+              errors: form.getErrors('handle'),
+              required: true
+            }) }}
+
+            <div class="method-redirect pane">
+              <div class="checkbox-toggle" data-checkbox="customRedirect">
+                <div class="togglebox">
+                  <svg><use xlink:href="#icon-redirect" class="icon-redirect"/></svg>
+                   {{ forms.checkboxField({
+                    id: 'customRedirect',
+                    class: 'customRedirect',
+                    name: 'formSettings[formRedirect][customRedirect]',
+                    value: 1,
+                    checked: form.formSettings.formRedirect.customRedirect is defined ? form.formSettings.formRedirect.customRedirect : null,
+                    errors: form.getErrors('customRedirect'),
+                    required: false
+                  }) }}
+                </div>
+                <div class="togglecontent">
+                  <h3>{{ "Use Custom Redirect"|t }}</h3>
+                  <p>{{ "Upon form submission redirect to custom success page. By default it redirects to form page."|t }}</p>
+                </div>
+              </div>
+              <div class="checkbox-extra">
+                {{ forms.textField({
+                  label: "Redirect URL"|t,
+                  instructions: "Enter relative redirect page url."|t,
+                  id: 'customRedirectUrl',
+                  class: 'customRedirectUrl',
+                  name: 'formSettings[formRedirect][customRedirectUrl]',
+                  value: form.formSettings.formRedirect.customRedirectUrl is defined ? form.formSettings.formRedirect.customRedirectUrl : '',
+                  size: 50,
+                  errors: form.getErrors('customRedirectUrl'),
+                  required: true
+                }) }}
+              </div>
+            </div>
+
+            <div class="method-files pane{% if ajaxUploadErrors %} errors toggle-error{% endif %}">
+              <div class="checkbox-toggle" data-checkbox="hasFileUploads">
+                <div class="togglebox">
+                  <svg><use xlink:href="#icon-upload" class="icon-upload"/></svg>
+                   {{ forms.checkboxField({
+                    id: 'hasFileUploads',
+                    class: 'hasFileUploads',
+                    name: 'formSettings[hasFileUploads]',
+                    value: 1,
+                    checked: form.formSettings.hasFileUploads is defined ? form.formSettings.hasFileUploads : null,
+                    errors: form.getErrors('hasFileUploads'),
+                    required: false
+                  }) }}
+                </div>
+                <div class="togglecontent">
+                  <h3>{{ "Has Files Uploads"|t }}</h3>
+                  <p>{{ "Will this form upload any files?"|t }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="method-ajax pane{% if ajaxUploadErrors %} errors toggle-error{% endif %}">
+              <div class="checkbox-toggle" data-checkbox="ajaxSubmit">
+                <div class="togglebox">
+                  <svg><use xlink:href="#icon-rocket" class="icon-rocket"/></svg>
+                   {{ forms.checkboxField({
+                    id: 'ajaxSubmit',
+                    class: 'ajaxSubmit',
+                    name: 'formSettings[ajaxSubmit]',
+                    value: 1,
+                    checked: form.formSettings.ajaxSubmit is defined ? form.formSettings.ajaxSubmit : null,
+                    errors: form.getErrors('ajaxSubmit'),
+                    required: false
+                  }) }}
+                </div>
+                <div class="togglecontent">
+                  <h3>{{ "Use AJAX?"|t }}</h3>
+                  <p>{{ "Should we submit the form via ajax? No page refresh will happen."|t }}</p>
+                </div>
+              </div>
+            </div>
+            
+            {% for ajaxError in ajaxUploadErrors %}
+              <h2 class="toggle-error">{{ ajaxError }}</h2>
+            {% endfor %}
+          </div>
+
+          <div id="spam-protection" class="tab-content">
+            <div class="method-time pane">
+              <div class="checkbox-toggle" data-checkbox="spamTimeMethod">
+                <div class="togglebox">
+                  <svg><use xlink:href="#icon-timer" class="icon-timer"/></svg>
+                   {{ forms.checkboxField({
+                    id: 'spamTimeMethod',
+                    class: 'spamTimeMethod',
+                    name: 'spamProtectionSettings[spamTimeMethod]',
+                    value: 1,
+                    checked: form.spamProtectionSettings.spamTimeMethod is defined ? form.spamProtectionSettings.spamTimeMethod : null,
+                    errors: form.getErrors('spamTimeMethod'),
+                    required: false
+                  }) }}
+                </div>
+                <div class="togglecontent">
+                  <h3>{{ "Timed Submissions"|t }}</h3>
+                  <p>{{ "Allow minimum time to submit a form."|t }}</p>
+                </div>
+              </div>
+              
+              <div class="checkbox-extra">
+                {{ forms.textField({
+                  label: "Time"|t,
+                  instructions: "Enter how many seconds to wait untill submissions are valid."|t,
+                  id: 'spamTimeMethodTime',
+                  class: 'spamTimeMethodTime',
+                  name: 'spamProtectionSettings[spamTimeMethodTime]',
+                  value: form.spamProtectionSettings.spamTimeMethodTime is defined ? form.spamProtectionSettings.spamTimeMethodTime : '',
+                  size: 50,
+                  errors: form.getErrors('spamTimeMethodTime'),
+                  required: true
+                }) }}
+              </div>
+            </div>
+
+            <div class="method-honeypot pane">
+              
+              <div class="checkbox-toggle" data-checkbox="spamHoneypotMethod">
+                <div class="togglebox">
+                  <svg><use xlink:href="#icon-target" class="icon-target"/></svg>
+                   {{ forms.checkboxField({
+                    id: 'spamHoneypotMethod',
+                    class: 'spamHoneypotMethod',
+                    name: 'spamProtectionSettings[spamHoneypotMethod]',
+                    value: 1,
+                    checked: form.spamProtectionSettings.spamHoneypotMethod is defined ? form.spamProtectionSettings.spamHoneypotMethod : null,
+                    errors: form.getErrors('spamHoneypotMethod'),
+                    required: false
+                  }) }}
+                </div>
+                <div class="togglecontent">
+                  <h3>{{ "Honeypot"|t }}</h3>
+                  <p>{{ "String matching spam protection."|t }}</p>
+                </div>
+              </div>
+
+              <div class="checkbox-extra">
+                {{ forms.textField({
+                  label: "Honeypot Input Message"|t,
+                  instructions: "Enter message for screen readers."|t,
+                  id: 'spamHoneypotMethodMessage',
+                  class: 'spamHoneypotMethodMessage',
+                  name: 'spamProtectionSettings[spamHoneypotMethodMessage]',
+                  value: (form.spamProtectionSettings.spamHoneypotMethodMessage is defined ? form.spamProtectionSettings.spamHoneypotMethodMessage : null),
+                  size: 50,
+                  errors: form.getErrors('spamHoneypotMethodMessage'),
+                  required: true
+                }) }}
+              </div>
+            </div>
+          </div>
+
+          <div id="messages" class="tab-content">
+            {{ forms.textField({
+              label: "Success Message"|t,
+              instructions: "Please enter success message."|t,
+              id: 'successMessage',
+              class: 'successMessage',
+              name: 'messageSettings[successMessage]',
+              value: (form.messageSettings.successMessage is defined ? form.messageSettings.successMessage : null),
+              size: 100,
+              errors: form.getErrors('successMessage'),
+              required: false
+            }) }}
+
+            {{ forms.textField({
+              label: "Error Message"|t,
+              instructions: "Please enter error message."|t,
+              id: 'errorMessage',
+              class: 'errorMessage',
+              name: 'messageSettings[errorMessage]',
+              value: (form.messageSettings.errorMessage is defined ? form.messageSettings.errorMessage : null),
+              size: 100,
+              errors: form.getErrors('errorMessage'),
+              required: false
+            }) }}
+          </div>
+
+          <div id="notify" class="tab-content">
+
+            <div class="method-notify pane">
+            
+              <div class="checkbox-toggle" data-checkbox="notifySubmission">
+                <div class="togglebox">
+                  <svg><use xlink:href="#icon-notify" class="icon-notify"/></svg>
+                   {{ forms.checkboxField({
+                    id: 'notifySubmission',
+                    class: 'notifySubmission',
+                    name: 'notificationSettings[notifySubmission]',
+                    value: 1,
+                    checked: form.notificationSettings.notifySubmission is defined ? form.notificationSettings.notifySubmission : null,
+                    errors: form.getErrors('notifySubmission'),
+                    required: false
+                  }) }}
+                </div>
+                <div class="togglecontent">
+                  <h3>{{ "Notify Admin of Submissions"|t }}</h3>
+                  <p>{{ "Notify admin of form submission."|t }}</p>
+                </div>
+              </div>
+              <div class="checkbox-extra">
+                <header>
+                  <h3>{{ "Email Settings & Template"|t }}</h3>
+                  <div class="instructions">
+                    <p>{{ "Please update your email settings and apply optional template styles."|t }}</p>
+                  </div>
+                </header>
+
+                <div class="notification-tabs-wrapper">
+                  <div class="notification-tabs">
+                    <h2 class="current"><a href="#email-admin-settings"><svg><use xlink:href="#icon-settings" class="icon-settings"/></svg></a></h2>
+                    <h2><a href="#email-admin-templates"><svg><use xlink:href="#icon-news" class="icon-news"/></svg></a></h2>
+                  </div>
+                  <div class="notification-tabs-container">
+                    <div id="email-admin-settings" class="email-tab-content">
+                      <h1>{{ "Email Settings"|t }}</h1>
+                      {{ forms.textField({
+                        label: "Notification Email"|t,
+                        instructions: "Where should submission notification be sent to?"|t,
+                        id: 'notifyEmail',
+                        class: 'notifyEmail',
+                        name: 'notificationSettings[emailSettings][notifyEmail]',
+                        value: (form.notificationSettings.emailSettings.notifyEmail is defined ? form.notificationSettings.emailSettings.notifyEmail : null),
+                        size: 50,
+                        errors: form.getErrors('notifyEmail'),
+                        required: false
+                      }) }}
+                     
+                      {{ forms.textField({
+                        label: "Email Subject"|t,
+                        instructions: "Subject line for email notifications."|t,
+                        id: 'emailSubject',
+                        class: 'emailSubject',
+                        name: 'notificationSettings[emailSettings][emailSubject]',
+                        value: (form.notificationSettings.emailSettings.emailSubject is defined ? form.notificationSettings.emailSettings.emailSubject : null),
+                        size: 50,
+                        errors: form.getErrors('emailSubject'),
+                        required: false
+                      }) }}
+
+                      <div class="field" id="sendSubmissionData-field">
+                        <div class="heading">
+                           <label for="emailSubject">{{ "Include Submission Data"|t }}</label>
+                          <div class="instructions"><p>{{ "Send submission data with the email?"|t }}</p></div>
+                        </div>
+                        <div class="input">
+                          {{ forms.lightswitch({
+                            id: 'sendSubmissionData',
+                            class: 'sendSubmissionData',
+                            name: 'notificationSettings[emailSettings][sendSubmissionData]',
+                            on: (form.notificationSettings.emailSettings.sendSubmissionData is defined ? form.notificationSettings.emailSettings.sendSubmissionData : null),
+                            errors: form.getErrors('sendSubmissionData'),
+                          }) }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div id="email-admin-templates" class="email-tab-content">
+                      <h1>{{ "Template Settings"|t }}</h1>
+                      
+                      <div class="field" id="emailTemplateStyle-field">
+                        <div class="heading">
+                          <label for="emailTemplateStyle">{{ "Email Template Style"|t }}</label>
+                          <div class="instructions"><p>{{ "Choose template style for your email notification."|t }}</p></div>
+                        </div>
+
+                        <div class="input">
+                          {% set templateSettings = (form.notificationSettings.templateSettings.emailTemplateStyle is defined ? form.notificationSettings.templateSettings.emailTemplateStyle : 'text') %}
+                          <div class="radio">
+                            <input type="radio" value="text" id="emailTemplateStyle" name="notificationSettings[templateSettings][emailTemplateStyle]"{% if templateSettings == 'text' %} checked{% endif %}>
+                            <label for="emailTemplateStyle"><span><svg><use xlink:href="#icon-text" class="icon-text"/></svg></span>{{ "Text Only"|t }}</label>
+                          </div>
+                          <div class="radio">
+                            <input type="radio" value="html" id="emailTemplateStyle2" name="notificationSettings[templateSettings][emailTemplateStyle]"{% if templateSettings == 'html' %} checked{% endif %}>
+                            <label for="emailTemplateStyle2"><span><svg><use xlink:href="#icon-news" class="icon-news"/></svg></span>{{ "HTML Template"|t }}</label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div id="html-template-extra">
+                        <div class="field">
+                          <div class="heading">
+                            <label for="emailCustomLogo">{{ "Custom Logo"|t }}</label>
+                            <div class="instructions"><p>{{ "Brand your email template with custom logo"|t }}</p></div>
+                          </div>
+                          <div class="input">
+                            {% set elements = (elements is defined ? elements : []) -%}
+                            {{ forms.elementSelectField({
+                              id: 'emailCustomLogo',
+                              name: 'notificationSettings[templateSettings][emailCustomLogo]',
+                              selectionLabel: "Select Logo"|t,
+                              elementType: craft.elements.getElementType("Asset"),
+                              elements: elements,
+                              criteria: {"kind":[],"localeEnabled":null,"locale":"en_us"},
+                              jsClass: 'Craft.AssetSelectInput',
+                              limit: 1,
+                              errors: form.getErrors('emailCustomLogo'),
+                            }) }}
+                          </div>
+                        </div>
+
+                        <div class="field">
+                          <div class="heading">
+                            <label for="emailBackgroundColor">{{ "Template Background Color"|t }}</label>
+                            <div class="instructions"><p>{{ "Choose background color for your email template"|t }}</p></div>
+                          </div>
+                          <div class="input">
+                            {{ forms.color({
+                              id: 'emailBackgroundColor',
+                              class: 'emailBackgroundColor',
+                              name: 'notificationSettings[templateSettings][emailBackgroundColor]',
+                              value: (form.notificationSettings.templateSettings.emailBackgroundColor is defined ? form.notificationSettings.templateSettings.emailBackgroundColor : '#f5f5f5'),
+                              errors: form.getErrors('emailBackgroundColor'),
+                              required: false
+                            }) }}
+                          </div>
+                        </div>
+
+                        {{ forms.textField({
+                          label: "Container With"|t,
+                          instructions: "Enter container with for your email template (pixels)."|t,
+                          id: 'emailContainerWidth',
+                          class: 'emailContainerWidth',
+                          name: 'notificationSettings[templateSettings][emailContainerWidth]',
+                          value: (form.notificationSettings.templateSettings.emailContainerWidth is defined ? form.notificationSettings.templateSettings.emailContainerWidth : '500'),
+                          size: 50,
+                          errors: form.getErrors('emailContainerWidth'),
+                        }) }}
+
+                      </div>
+                      
+                      {% includeCssResource "lib/redactor/redactor.css" %}
+                      {% includeJsResource "lib/redactor/redactor.js" %}
+                      {{ forms.textareaField({
+                        label: "Body Copy"|t,
+                        instructions: "Enter copy that will appear in the email notification."|t,
+                        id: 'emailBodyCopy',
+                        class: 'emailBodyCopy',
+                        name: 'notificationSettings[templateSettings][emailBodyCopy]',
+                        value: (form.notificationSettings.templateSettings.emailBodyCopy is defined ? form.notificationSettings.templateSettings.emailBodyCopy : null),
+                        errors: form.getErrors('emailBodyCopy'),
+                        required: false
+                      }) }}
+
+                      {{ forms.textareaField({
+                        label: "Footer Copy"|t,
+                        instructions: "Enter copy that will appear in the email footer."|t,
+                        id: 'emailAdditionalFooterCopy',
+                        class: 'emailAdditionalFooterCopy',
+                        name: 'notificationSettings[templateSettings][emailAdditionalFooterCopy]',
+                        value: (form.notificationSettings.templateSettings.emailAdditionalFooterCopy is defined ? form.notificationSettings.templateSettings.emailAdditionalFooterCopy : null),
+                        errors: form.getErrors('emailAdditionalFooterCopy'),
+                        required: false
+                      }) }}
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div id="fields" class="tab-content">
+            {% include "formbuilder2/inputs/fieldlayoutdesigner" with {
+              fieldLayout: form.getFieldLayout(),
+              customizableTabs: true
+            } only %}
+          </div>
+
+        </div>
+
+        {# Errors #}
+        {%- set errors = (errors is defined ? errors : null) -%}
+        {% if errors %}
+          {% include "formbuilder2/templates/inputs/errorList" with { errors: errors } %}
+        {% endif %}
+
+        <div class="buttons">
+          <input type="submit" class="btn submit" value="{{ 'Save'|t }}">
+        </div>
+
+      </form>
+
+
+    </div>
+
+    {# No Forms #}
+    <div class="no-forms" style="display: none;">
+      <p>{{ "Hello! You don't have any forms yet."|t }}</p>
+      <a href="#" class="create-form-button"><svg><use xlink:href="#icon-text" class="icon-text"/></svg> <span>{{ "Create a Form"|t }}</span></a>
+    </div>
+
+  </section>
+
+{% endblock %}
+
+{% set newFormJs %}
+  {% if not form.handle %}new Craft.HandleGenerator('#name', '#handle');{% endif %}
+  $('#emailBodyCopy').redactor();
+  $('#emailAdditionalFooterCopy').redactor();
+{% endset %}
+{% includeJs newFormJs %}

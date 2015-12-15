@@ -6,8 +6,8 @@ namespace Craft;
  *
  * @author    Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @copyright Copyright (c) 2014, Pixel & Tonic, Inc.
- * @license   http://buildwithcraft.com/license Craft License Agreement
- * @see       http://buildwithcraft.com
+ * @license   http://craftcms.com/license Craft License Agreement
+ * @see       http://craftcms.com
  * @package   craft.app.fieldtypes
  * @since     1.0
  */
@@ -55,6 +55,16 @@ class RichTextData extends \Twig_Markup
 	public function getRawContent()
 	{
 		return $this->_rawContent;
+	}
+
+	/**
+	 * Returns the parsed content, with reference tags returned as HTML links.
+	 *
+	 * @return string
+	 */
+	public function getParsedContent()
+	{
+		return $this->content;
 	}
 
 	/**

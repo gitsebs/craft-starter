@@ -1,0 +1,45 @@
+{%- set id = (id is defined and id ? id : 'colorpicker-'~random()) %}
+{%- set requiredJs = (requiredJs is defined and requiredJs ? requiredJs : null) %}
+
+<div class="field">
+  {% if label or instructions %}
+    <div class="heading">
+      {% if label %}
+        <label{% if required is defined and required %} class="required"{% endif %}{% if id %} for="{{ id }}"{% endif %}>
+          {{- label|raw -}}
+        </label>
+      {% endif %}
+      {% if instructions %}
+        <div class="instructions">{{ instructions|md }}</div>
+      {% endif %}
+    </div>
+  {% endif %}
+  <div class="input" id="{{ id }}">
+    <input 
+      type="text" 
+      {%- if value is defined %} value="{{ value }}"{% endif %}
+      {%- if handle is defined %} name="{{ handle }}"{% endif %}>
+    <span class="input-group-addon"><i></i></span>
+  </div>
+</div>
+
+{% set colorpickerJs %}
+  {% if requiredJs == 'colorpicker' %}
+  $('#{{ id }}').colorpicker({
+    customClass: 'colorpicker-2x',
+    sliders: {
+      saturation: {
+        maxLeft: 200,
+        maxTop: 200
+      },
+      hue: {
+        maxTop: 200
+      },
+      alpha: {
+        maxTop: 200
+      }
+    }
+  });
+  {% endif %}
+{% endset %}
+{% includeJs colorpickerJs %}

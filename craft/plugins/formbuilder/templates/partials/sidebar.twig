@@ -1,0 +1,13 @@
+{# Under Dev #}
+{# <section class="primary">
+  <ul>
+  {% for key, nav in navigation %}
+    {% if nav.heading is defined %}
+      <li class="heading"><span>{{ nav.heading }}</span></li>
+    {% endif %}
+      {% for item in nav.nav %}
+        <li><a href="{{ item.url }}"{% if (page == item.label) %} class="sel"{% endif %}><span class="icon"><span class="fa fa-{{ item.icon }}"></span></span> {{ item.label }} {% if item.extra %}<span class="extra">{{ item.extra }}</span>{% endif %}</a></li>
+      {% endfor %}
+  {% endfor %}
+  </ul>
+</section> #}

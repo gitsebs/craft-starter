@@ -1,10 +1,10 @@
 <?php
 namespace Craft;
 
-define('CRAFT_VERSION', '2.4');
-define('CRAFT_BUILD', '2726');
-define('CRAFT_SCHEMA_VERSION', '2.4.0');
-define('CRAFT_RELEASE_DATE', '1448059858');
+define('CRAFT_VERSION', '2.5');
+define('CRAFT_BUILD', '2754');
+define('CRAFT_SCHEMA_VERSION', '2.5.11');
+define('CRAFT_RELEASE_DATE', '1449608205');
 define('CRAFT_MIN_BUILD_REQUIRED', '2570');
 define('CRAFT_MIN_BUILD_URL', 'http://download.buildwithcraft.com/craft/2.1/2.1.2570/Craft-2.1.2570.zip');
 define('CRAFT_TRACK', 'stable');

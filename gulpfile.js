@@ -20,7 +20,7 @@ var cssnext = require("cssnext");
 var cssnano = require('cssnano');
 
 //JS
-var gulpWebpack = require('gulp-webpack');
+var webpackStream = require('webpack-stream');
 var webpack = require('webpack')
 var webpackDevMiddleware = require('webpack-dev-middleware')
 var webpackConfig = require('./webpack.config')
@@ -32,57 +32,37 @@ var pngquant = require('imagemin-pngquant');
 var minifyCss = require('gulp-minify-css');
 
 
-//Config
-var paths = {
-  input: {
-    all: './craft/templates/**/*',
-    html: './craft/templates/**/*.html',
-    scss: './craft/templates/**/*.*css',
-    js: './craft/templates/_index.js',
-    images: [
-      './craft/templates/**/*.png',
-      './craft/templates/**/*.jpg',
-      './craft/templates/**/*.jpeg',
-      './craft/templates/**/*.svg',
-      './craft/templates/**/*.gif',
-    ],
-  },
-  output: './assets'
-}
-var autoprefixerOptions = {
-  browsers: ['last 2 versions', '> 5%', 'Firefox ESR']
-};
-
+var config = require('./config')
+var paths = config.paths
 
 //Tasks
 
 gulp.task('styles', function(){
   var processors = [
-        autoprefixer(autoprefixerOptions),
-        cssnext(),
-        precss(),
-        cssnano()
+    autoprefixer(config.autoprefixerOptions),
+    cssnext(),
+    precss(),
+    cssnano()
   ];
-
   return gulp.src(paths.input.scss)
     .pipe(development(sourcemaps.init()))
     .pipe(postcss(processors, {syntax: scss}))
     .pipe(concat('bundle.css'))
     .pipe(development(sourcemaps.write()))
     .pipe(gulp.dest(paths.output))
+    .pipe(browserSync.stream())
     .pipe(size({
       showFiles: true
     }))
-    .pipe(browserSync.stream())
 })
 
 gulp.task('js', function() {
   return gulp.src(paths.input.js)
-    .pipe(gulpWebpack(require('./webpack.config.js'), webpack))
-    .pipe(gulp.dest('dist/'));
+    .pipe(webpackStream(config.webpack))
+    .pipe(gulp.dest(paths.output));
 });
 
-gulp.task('image', function () {
+gulp.task('images', function () {
   gulp.src(paths.input.images)
     .pipe(imagemin({
       progressive: true,
@@ -92,14 +72,14 @@ gulp.task('image', function () {
     .pipe(gulp.dest(paths.output));
 });
 
-gulp.task('browser-sync', ['styles'], function() {
+gulp.task('browser-sync', function() {
   var proxy = proxyMiddleware(['**', '!/assets/**'], {
-      target: 'http://craft.dev',
+      target: config.domain,
       autoRewrite: true,
       changeOrigin: true,
   })
-  var webpackDev = webpackDevMiddleware(bundler, {
-    publicPath: webpackConfig.output.publicPath,
+  var webpackDev = webpackDevMiddleware(webpack(config.webpack), {
+    publicPath: '/assets/',
     stats: { colors: true },
     watchOptions: {
         aggregateTimeout: 300,
@@ -109,26 +89,25 @@ gulp.task('browser-sync', ['styles'], function() {
   browserSync.init([paths.input.js],{
     server: {
         baseDir: "./",
-        port: 3000,
+        port: config.port,
         middleware: [ proxy, webpackDev ]
     },
     // tunnel: true,
     open: false,
     rewriteRules: [
       {
-        match: /craft\.dev/g,
+        match: config.domainRegEx,
         fn: function (match) {
-          return 'localhost:3000';
+          return 'localhost:'+config.port;
         }
       }
     ]
   })
-
-
 })
 
-gulp.task('dev', ['browser-sync'], function () {
+gulp.task('default', ['browser-sync','styles','js','images'], function () {
   gulp.watch(paths.input.scss,['styles'])
+  gulp.watch(paths.input.jsAll,['js']).on('change', browserSync.reload);
   gulp.watch(paths.input.html).on('change', browserSync.reload);
     // gulp.watch("./craft/templates/**/*", ['sass']);
 })

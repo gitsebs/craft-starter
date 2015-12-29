@@ -2,25 +2,17 @@ var webpack = require('webpack');
 var path = require('path');
 
 module.exports = {
-  // debug: true,
-  devtool: '#eval-source-map',
-  // context: path.join(__dirname, 'assets'),
-
-  entry: [
-    './craft/templates/_index'
-  ],
-
+  devtool: 'eval-source-map',
+  entry: ['./craft/templates/_index.js'],
   output: {
-    path: path.join(__dirname, 'assets'),
-    publicPath: '/assets/',
+    path: require('path').join(__dirname, 'assets'),
     filename: 'bundle.js'
   },
-
   plugins: [
     new webpack.optimize.OccurenceOrderPlugin(),
-    new webpack.NoErrorsPlugin()
+    new webpack.NoErrorsPlugin(),
+    new webpack.optimize.UglifyJsPlugin()
   ],
-
   module: {
     loaders: [
       { test: /\.js$/, exclude: /node_modules/, loaders: ['babel'] }

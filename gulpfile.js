@@ -1,20 +1,38 @@
 // Gulp
 var gulp = require('gulp')
-var sass = require('gulp-sass')
 var concat = require('gulp-concat')
 var sourcemaps = require('gulp-sourcemaps')
-var autoprefixer = require('gulp-autoprefixer')
-var imagemin = require('gulp-imagemin'),
-    pngquant = require('imagemin-pngquant');
-    var minifyCss = require('gulp-minify-css');
-    var gulpWebpack = require('gulp-webpack');
+var size = require('gulp-size')
 var browserSync = require('browser-sync')
 var proxyMiddleware = require('http-proxy-middleware')
+var environments = require('gulp-environments');
+var development = environments.development;
+var production = environments.production;
+var flatten = require('gulp-flatten');
+
+
+//Styles
+var postcss = require('gulp-postcss');
+var autoprefixer = require('autoprefixer');
+var scss = require('postcss-scss');
+var precss = require('precss');
+var cssnext = require("cssnext");
+var cssnano = require('cssnano');
+
+//JS
+var gulpWebpack = require('gulp-webpack');
 var webpack = require('webpack')
 var webpackDevMiddleware = require('webpack-dev-middleware')
 var webpackConfig = require('./webpack.config')
 var bundler = webpack(webpackConfig)
 
+//Images
+var imagemin = require('gulp-imagemin')
+var pngquant = require('imagemin-pngquant');
+var minifyCss = require('gulp-minify-css');
+
+
+//Config
 var paths = {
   input: {
     all: './craft/templates/**/*',
@@ -31,25 +49,30 @@ var paths = {
   },
   output: './assets'
 }
-
 var autoprefixerOptions = {
   browsers: ['last 2 versions', '> 5%', 'Firefox ESR']
 };
 
-var sassOptions = {
-  errLogToConsole: true,
-  outputStyle: 'compressed'
-};
 
-gulp.task('sass', function(){
+//Tasks
+
+gulp.task('styles', function(){
+  var processors = [
+        autoprefixer(autoprefixerOptions),
+        cssnext(),
+        precss(),
+        cssnano()
+  ];
+
   return gulp.src(paths.input.scss)
-    .pipe(sourcemaps.init())
-    .pipe(sass().on('error', sass.logError))
+    .pipe(development(sourcemaps.init()))
+    .pipe(postcss(processors, {syntax: scss}))
     .pipe(concat('bundle.css'))
-    .pipe(autoprefixer(autoprefixerOptions))
-    .pipe(minifyCss({compatibility: 'ie8'}))
-    .pipe(sourcemaps.write())
+    .pipe(development(sourcemaps.write()))
     .pipe(gulp.dest(paths.output))
+    .pipe(size({
+      showFiles: true
+    }))
     .pipe(browserSync.stream())
 })
 
@@ -65,10 +88,11 @@ gulp.task('image', function () {
       progressive: true,
       use: [pngquant()]
     }))
+    .pipe(flatten())
     .pipe(gulp.dest(paths.output));
 });
 
-gulp.task('browser-sync', ['sass'], function() {
+gulp.task('browser-sync', ['styles'], function() {
   var proxy = proxyMiddleware(['**', '!/assets/**'], {
       target: 'http://craft.dev',
       autoRewrite: true,
@@ -104,7 +128,7 @@ gulp.task('browser-sync', ['sass'], function() {
 })
 
 gulp.task('dev', ['browser-sync'], function () {
-  gulp.watch(paths.input.scss,['sass'])
+  gulp.watch(paths.input.scss,['styles'])
   gulp.watch(paths.input.html).on('change', browserSync.reload);
     // gulp.watch("./craft/templates/**/*", ['sass']);
 })

@@ -57,7 +57,7 @@ gulp.task('styles', function(){
 })
 
 gulp.task('js', function() {
-  return gulp.src(paths.input.js)
+  return gulp.src('')
     .pipe(webpackStream(config.webpack))
     .pipe(gulp.dest(paths.output));
 });

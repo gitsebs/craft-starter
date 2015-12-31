@@ -2,7 +2,7 @@ var webpack = require('webpack');
 var path = require('path');
 
 module.exports = {
-  devtool: 'eval-source-map',
+  devtool: 'source-map',
   entry: ['./craft/templates/_index.js'],
   output: {
     path: require('path').join(__dirname, 'assets'),

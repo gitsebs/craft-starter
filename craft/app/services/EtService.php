@@ -16,16 +16,16 @@ class EtService extends BaseApplicationComponent
 	// Constants
 	// =========================================================================
 
-	const Ping              = 'https://elliott.buildwithcraft.com/actions/elliott/app/ping';
-	const CheckForUpdates   = 'https://elliott.buildwithcraft.com/actions/elliott/app/checkForUpdates';
-	const TransferLicense   = 'https://elliott.buildwithcraft.com/actions/elliott/app/transferLicenseToCurrentDomain';
-	const GetUpgradeInfo    = 'https://elliott.buildwithcraft.com/actions/elliott/app/getUpgradeInfo';
-	const GetCouponPrice    = 'https://elliott.buildwithcraft.com/actions/elliott/app/getCouponPrice';
-	const PurchaseUpgrade   = 'https://elliott.buildwithcraft.com/actions/elliott/app/purchaseUpgrade';
-	const GetUpdateFileInfo = 'https://elliott.buildwithcraft.com/actions/elliott/app/getUpdateFileInfo';
-	const RegisterPlugin    = 'https://elliott.buildwithcraft.com/actions/elliott/plugins/registerPlugin';
-	const UnregisterPlugin  = 'https://elliott.buildwithcraft.com/actions/elliott/plugins/unregisterPlugin';
-	const TransferPlugin    = 'https://elliott.buildwithcraft.com/actions/elliott/plugins/transferPlugin';
+	const Ping              = 'https://elliott.craftcms.com/actions/elliott/app/ping';
+	const CheckForUpdates   = 'https://elliott.craftcms.com/actions/elliott/app/checkForUpdates';
+	const TransferLicense   = 'https://elliott.craftcms.com/actions/elliott/app/transferLicenseToCurrentDomain';
+	const GetUpgradeInfo    = 'https://elliott.craftcms.com/actions/elliott/app/getUpgradeInfo';
+	const GetCouponPrice    = 'https://elliott.craftcms.com/actions/elliott/app/getCouponPrice';
+	const PurchaseUpgrade   = 'https://elliott.craftcms.com/actions/elliott/app/purchaseUpgrade';
+	const GetUpdateFileInfo = 'https://elliott.craftcms.com/actions/elliott/app/getUpdateFileInfo';
+	const RegisterPlugin    = 'https://elliott.craftcms.com/actions/elliott/plugins/registerPlugin';
+	const UnregisterPlugin  = 'https://elliott.craftcms.com/actions/elliott/plugins/unregisterPlugin';
+	const TransferPlugin    = 'https://elliott.craftcms.com/actions/elliott/plugins/transferPlugin';
 
 	// Public Methods
 	// =========================================================================
@@ -142,7 +142,7 @@ class EtService extends BaseApplicationComponent
 
 		if ($handle == 'craft')
 		{
-			$path = 'http://download.buildwithcraft.com/craft/'.$updateModel->app->latestVersion.'/'.$buildVersion.'/Patch/'.($handle == 'craft' ? $updateModel->app->localBuild : $updateModel->app->localVersion.'.'.$updateModel->app->localBuild).'/'.$md5.'.zip';
+			$path = 'http://download.craftcms.com/craft/'.$updateModel->app->latestVersion.'/'.$buildVersion.'/Patch/'.($handle == 'craft' ? $updateModel->app->localBuild : $updateModel->app->localVersion.'.'.$updateModel->app->localBuild).'/'.$md5.'.zip';
 		}
 		else
 		{
@@ -167,7 +167,7 @@ class EtService extends BaseApplicationComponent
 				}
 			}
 
-			$path = 'http://download.buildwithcraft.com/plugins/'.$handle.'/'.$latestVersion.'/'.$latestVersion.'.'.$latestBuild.'/Patch/'.$localVersion.'.'.$localBuild.'/'.$md5.'.zip';
+			$path = 'http://download.craftcms.com/plugins/'.$handle.'/'.$latestVersion.'/'.$latestVersion.'.'.$latestBuild.'/Patch/'.$localVersion.'.'.$localBuild.'/'.$md5.'.zip';
 		}
 
 		$et = new Et($path, 240);

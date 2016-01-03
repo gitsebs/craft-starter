@@ -1,10 +1,14 @@
+@import "./vars.scss";
+
 .home {
+  color: $red;
   font-family: sans-serif;
-  color: #00f;
+
   div {
     background: red;
+
     :hover {
-        text-decoration: underline;
+      text-decoration: underline;
     }
   }
 }

@@ -1,4 +1,6 @@
-function logMe(){
-  console.log('js loaded');
+function logMe() {
+  // console.log('js loaded');
+  let me = 'me';
+  me = me + me;
 }
-logMe()
+logMe();

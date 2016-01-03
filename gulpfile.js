@@ -150,4 +150,6 @@ gulp.task('default', ['browser-sync','styles','images'], function () {
   // gutil.beep();
 })
 
-gulp.task('build', ['styles','scripts','images'])
+gulp.task('build', ['styles','scripts','images'], function(){
+  production() ? logger.warn('build','ENV_PRODUCTION') : logger.error('build','ENV_UNDEFINED')
+})

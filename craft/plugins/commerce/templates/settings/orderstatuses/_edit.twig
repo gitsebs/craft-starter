@@ -1,0 +1,112 @@
+{% extends "commerce/_layouts/settingscp" %}
+
+{% set crumbs = [
+    { label: 'Commerce ' ~ 'Settings'|t, url: url('commerce/settings') },
+    { label: 'Order Statuses'|t, url: url('commerce/settings/orderstatuses') }
+] %}
+
+{% set fullPageForm = true %}
+
+{% set selectedTab = 'settings' %}
+{% import "_includes/forms" as forms %}
+
+{% block content %}
+    <input type="hidden" name="action" value="commerce/orderStatuses/save">
+    <input type="hidden" name="redirect" value="commerce/settings/orderstatuses">
+    {% if orderStatus.id %}<input type="hidden" name="orderStatusId" value="{{ orderStatus.id }}">{% endif %}
+
+    {{ forms.textField({
+        label: "Name"|t,
+        first: true,
+        instructions: "What this status will be called in the CP."|t,
+        id: 'name',
+        name: 'name',
+        value: orderStatus.name,
+        errors: orderStatus.getErrors('name'),
+        required: true
+    }) }}
+
+    {{ forms.textField({
+        label: "Handle"|t,
+        instructions: "How you’ll refer to this status in the templates."|t,
+        id: 'handle',
+        class: 'code',
+        name: 'handle',
+        value: orderStatus.handle,
+        errors: orderStatus.getErrors('handle'),
+        required: true
+    }) }}
+
+    {{ forms.hidden({
+        id: 'color',
+        name: 'color',
+        value: orderStatus.color
+    }) }}
+
+    {% set colorField %}
+    <div>
+        <a id="color-menu-btn" class="btn menubtn" href="#"><span class="status {{ orderStatus.color }}"></span>{{ orderStatus.color|t|title }}</a>
+        <div class="menu">
+            <ul class="padded">
+                {% for color in ['green','orange', 'red', 'blue', 'yellow', 'pink', 'purple', 'turquoise', 'light', 'grey', 'black'] %}
+                <li><a data-val="{{ color }}" {% if orderStatus.color == color %}class="sel"{% endif %} href="#"><span class="status {{ color }}"></span>{{ color|t|title }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endset %}
+    {{ forms.field({
+        label: 'Color'|t,
+        instructions: 'Choose a color to represent the order’s status'|t
+    },colorField) }}
+
+
+    {% if not emails|length %}
+        {{ forms.field({
+            label: 'Status Emails'|t,
+            instructions: '<span class="error">'~'You currently have no emails configured to select for this status.'|t~'</span>',
+            disabled: true
+        }) }}
+    {% else %}
+        {{ forms.multiselectField({
+            label: 'Status Emails'|t,
+            instructions: 'Select the emails that will be sent when transitioning to this status.'|t,
+            id: 'emails',
+            name: 'emails',
+            options: emails,
+            values: emailIds is defined ? emailIds : orderStatus.getEmailIds(),
+            errors: orderStatus.getErrors('emails'),
+            class: 'selectize fullwidth',
+        }) }}
+    {% endif %}
+
+    {{ forms.checkboxField({
+        label: "New orders get this status by default"|t,
+        name: 'default',
+        value: 1,
+        checked: orderStatus.default,
+        errors: orderStatus.getErrors('default')
+    }) }}
+{% endblock %}
+
+{% includejs %}
+{% if not orderStatus.handle %}new Craft.HandleGenerator('#name', '#handle');{% endif %}
+$(function () {
+
+    $colorSelect = $('#color-menu-btn');
+    new Garnish.MenuBtn($colorSelect, {
+        onOptionSelect: function(data){
+            var val = $(data).data('val');
+            $('#color').val(val);
+            var html = "<span class='status "+val+"'></span>"+Craft.uppercaseFirst(val);
+            $colorSelect.html(html);
+        }
+    });
+
+
+    $('#emails').selectize({
+        plugins: ['remove_button'],
+        dropdownParent: 'body'
+    });
+});
+{% endincludejs %}

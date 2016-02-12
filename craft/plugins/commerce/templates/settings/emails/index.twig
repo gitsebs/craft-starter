@@ -1,0 +1,58 @@
+{% extends "commerce/_layouts/settings" %}
+
+
+{% block content %}
+    <h2>{{ "Emails"|t }}</h2>
+
+    <div id="no-emails"{% if emails|length %} class="hidden"{% endif %}>
+        <p>{{ "No emails exist yet."|t }}</p>
+    </div>
+
+    {% if emails|length %}
+    <table id="emails" class="data fullwidth collapsible">
+        <thead>
+        <tr>
+            <th scope="col">{{ "Name"|t }}</th>
+            <th scope="col">{{ "Subject"|t }}</th>
+            <th scope="col">{{ "To"|t }}</th>
+            <th scope="col">{{ "Bcc"|t }}</th>
+            <th scope="col">{{ "Template Path"|t }}</th>
+            <td class="thin"></td>
+        </tr>
+        </thead>
+        <tbody>
+        {% for email in emails %}
+            <tr data-id="{{ email.id }}" data-name="{{ email.name }}">
+                <th scope="row" data-title="{{ 'Name'|t }}">
+                    {% if email.enabled %}
+                        <span class="status green"></span>
+                    {% else %}
+                        <span class="status"></span>
+                    {% endif %}
+                    <a href="{{ url('commerce/settings/emails/'~email.id) }}">{{ email.name }}</a>
+                </th>
+                <td data-title="{{ 'Subject'|t }}">{{ email.subject }}</td>
+                <td data-title="{{ 'To'|t }}">{{ email.to }}</td>
+                <td data-title="{{ 'Bcc'|t }}">{{ email.bcc }}</td>
+                <td data-title="{{ 'Template Path'|t }}">{{ email.templatePath }}</td>
+                <td class="thin"><a class="delete icon" title="{{ 'Delete'|t }}" role="button"></a></td>
+            </tr>
+        {% endfor %}
+
+        </tbody>
+    </table>
+    {% endif %}
+
+    <div class="buttons">
+        <a href="{{ url('commerce/settings/emails/new') }}" class="btn submit add icon">{{ 'New email'|t }}</a>
+    </div>
+{% endblock %}
+
+
+{% includejs %}
+var adminTable = new Craft.AdminTable({
+tableSelector: '#emails',
+noObjectsSelector: '#no-emails',
+deleteAction: 'commerce/emails/delete'
+});
+{% endincludejs %}

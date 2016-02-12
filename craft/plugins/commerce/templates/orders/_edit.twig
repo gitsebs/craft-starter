@@ -1,0 +1,428 @@
+{% extends "commerce/_layouts/cp" %}
+
+{% set selectedSubnavItem = "orders" %}
+
+{% set crumbs = [
+{    label: "Orders"|t, url: url('commerce/orders') }
+] %}
+
+{% import "_includes/forms" as forms %}
+
+{% set pdfUrl = order.getPdfUrl() %}
+
+
+{% block main %}
+	<div class="pane">
+	<div class="order-header">
+	<div class="order-info">
+
+		<div class="order-info-box">
+			<table class="fullwidth data borderless">
+				<tr>
+					<td><strong>{{ "Reference"|t }}</strong></td>
+					<td>
+						<span title="{{ "Full Reference Number"|t }}: {{ order.number }}">{{ order.shortNumber }}</span>
+					</td>
+				</tr>
+				<tr>
+					<td><strong>{{ "Customer"|t }}</strong></td>
+					<td>{% if order.customer.userId %}<a
+							href="{{ order.customer.user.cpEditUrl }}">{{ order.email }}</a>{% else %}{{ order.email }}&nbsp;({{ "Guest"|t }}) {% endif %}
+					</td>
+				</tr>
+				<tr>
+					<td><strong>{{ "Order Date"|t }}</strong></td>
+					<td>{{ order.dateOrdered|date('D dS M Y') }}</td>
+				</tr>
+				<tr>
+					<td><strong>{{ "Status"|t }}</strong></td>
+					{% if order.orderStatus %}
+						<td><div id="order-status">{{ order.orderStatus.htmlLabel|raw }} &nbsp; <a
+									href="#"
+									class="updatestatus btn small"
+									data-currentStatus="{{ order.orderStatus.attributes|json_encode() }}"
+									data-orderStatuses="{{ craft.commerce.orderStatuses|json_encode() }}">{{ "Update Status"|t }}</a></div>
+						</td>
+					{% else %}
+						<td><span class="status"></span></td>
+					{% endif %}
+				<tr>
+					<td><strong>{{ "Total"|t }}</strong></td>
+					<td>{{ order.totalPrice|currency(order.currency) }}</td>
+				</tr>
+				<tr>
+					<td><strong>{{ "Paid"|t }} </strong></td>
+					<td>{{ order.totalPaid|currency(order.currency) }} {{ order.datePaid|date('D dS M Y') }}</td>
+				</tr>
+			</table>
+		</div>
+		</div>
+
+		<div class="order-addresses right">
+			<div class="order-address-box billingAddress">
+				<div class="order-address-box-content">
+				{% import "commerce/_includes/orders/address" as addressMacros %}
+
+				<strong>Billing Address </strong><br>
+				{% if order.billingAddress %}
+				<a class="small btn right"
+				   href="http://maps.google.com/maps?q={{ order.billingAddress.address1 }}+{{ order.billingAddress.address2 }}+{{ order.billingAddress.city }}+{{ order.billingAddress.zipCode }}+{{ order.billingAddress.stateText }}+{{ order.billingAddress.countryText }}"
+				   target="_blank">{{ "View Map"|t }}</a>
+				{{ addressMacros.formatAddress(order.billingAddress) }}
+				{% endif %}
+				</div>
+			</div>
+
+			<div class="order-address-box shippingAddress">
+				<div class="order-address-box-content">
+				<strong>Shipping Address </strong><br>
+				{% if order.shippingAddress %}
+				<a class="small btn right"
+				   href="http://maps.google.com/maps?q={{ order.shippingAddress.address1 }}+{{ order.shippingAddress.address2 }}+{{ order.shippingAddress.city }}+{{ order.shippingAddress.zipCode }}+{{ order.shippingAddress.stateText }}+{{ order.shippingAddress.countryText }}"
+				   target="_blank">{{ "View Map"|t }}</a>
+				{{ addressMacros.formatAddress(order.shippingAddress) }}
+				{% endif %}
+				</div>
+			</div> <!-- order address box -->
+		</div><!-- order addresses -->
+
+	</div>
+
+	<div class="order-details">
+		<table id="" class="data fullwidth collapsible">
+			<thead>
+			<tr>
+				<th scope="col">{{ 'Item'|t }}</th>
+				<th scope="col">{{ 'Note'|t }}</span></th>
+				<th scope="col">{{ 'Price'|t }}</span></th>
+				<th scope="col">{{ 'Quantity'|t }}</th>
+				<th scope="col">{{ 'Total'|t }}</th>
+				<th scope="col"></th>
+				<th scope="col"></th>
+			</tr>
+			</thead>
+			<tbody>
+
+			{% for lineItem in order.lineItems %}
+				<tr class="infoRow"
+					data-inforow='{% spaceless %}[
+					{"label":"Description","attribute":"description","currency":"false"},
+					{"label":"Tax Category","attribute":"taxcategory","currency":"false"},
+					{"label":"Price","attribute":"price","currency":"true"},
+					{"label":"Sale Amount","attribute":"saleamount","currency":"true"},
+					{"label":"Sale Price","attribute":"saleprice","currency":"true"},
+					{"label":"Quantity","attribute":"qty","currency":"false"},
+					{"label":"Tax","attribute":"tax","currency":"true"},
+					{"label":"Tax (Included)","attribute":"taxincluded","currency":"true"},
+					{"label":"Shipping Cost","attribute":"shippingcost","currency":"true"},
+					{"label":"Discount","attribute":"discount","currency":"true"},
+					{"label":"Total","attribute":"total","currency":"true"}
+					]'{% endspaceless %}
+					data-id="{{lineItem.id}}"
+					data-description="{{ lineItem.description }}"
+					data-taxcategory="{{ lineItem.taxCategory.name }}"
+					data-price="{{ lineItem.price|currency(order.currency) }}"
+					data-saleamount="{{ lineItem.saleAmount|currency(order.currency) }}"
+					data-saleprice="{{ lineItem.salePrice|currency(order.currency) }}"
+					data-tax="{{ lineItem.tax|currency(order.currency) }}"
+					data-taxincluded="{{ lineItem.taxIncluded|currency(order.currency) }}"
+					data-shippingcost="{{ lineItem.shippingCost|currency(order.currency) }}"
+					data-discount="{{ lineItem.discount|currency(order.currency) }}"
+					data-total="{{ lineItem.total|currency(order.currency) }}"
+					data-qty="{{ lineItem.qty }}">
+					<td>
+						{% if lineItem.purchasableId and lineItem.purchasable %}
+							{% if lineItem.purchasable.cpEditUrl %}
+								<a href="{{ lineItem.purchasable.cpEditUrl }}">{{ lineItem.description }}</a>
+							{% else %}
+								{{ lineItem.description }}
+							{% endif %}
+						{% else %}
+							{{ lineItem.description }}
+						{% endif %}
+						<br>{{ lineItem.sku }}
+						{% if lineItem.options|length %}
+						<a class="fieldtoggle first last" data-target="info-{{ lineItem.id}}">{{ "Options" }}</a>
+						<span id="info-{{ lineItem.id}}" class="hidden">
+							{% for key, option in lineItem.options %}
+								{{ key|t }}: {% if option is iterable %}<code>{{ option|json_encode()|raw }}</code>{% else %}{{ option }}{% endif %}<br>
+							{% endfor %}
+						</span>
+						{% endif %}
+					</td>
+					<td>
+					{% if lineItem.note %}{{ lineItem.note|raw|nl2br }}{% endif %}
+					</td>
+					<td>
+						{{ lineItem.salePrice|currency(order.currency) }}
+					</td>
+					<td>{{ lineItem.qty }}</td>
+					<td></td>
+					<td>
+						<span class="right">{{ lineItem.total|currency(order.currency) }}</span>
+					</td>
+					<td>
+						<span class="tableRowInfo" data-icon="info" href="#"></span>
+					</td>
+				</tr>
+			{% endfor %}
+			{% for adjustment in order.adjustments %}
+			<tr>
+				<td><strong>{{ adjustment.type|title|t }} {{ "Adjustment"|t }}</strong><br>{{ adjustment.name|title }} <span class="info"><strong>{{ adjustment.type|title|t }} {{ "Adjustment"|t }}</strong><br> {{ adjustment.description }}</span></td>
+				<td></td>
+				<td>{{ adjustment.amount|currency(order.currency) }}</td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+			</tr>
+			{% endfor %}
+			<tr>
+				<td></td>
+				<td></td>
+				<td>
+				{%  if order.isPaid %}
+					<div class="paidLogo"><span>{{ 'PAID'|t }}</div>
+				{% endif %}
+				</td>
+				<td></td>
+				<td><strong>{{ "Items Total" }}</strong></td>
+				<td>
+					<span class="right">{{ order.itemTotal|currency(order.currency) }}</span>
+				</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td><strong>{{ "Base Shipping Cost"|t }}</strong></td>
+				<td>
+					<span class="right">{{ order.baseShippingCost|currency(order.currency) }}</span>
+				</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td><strong>{{ "Base Discount"|t }}</strong></td>
+				<td>
+					<span class="right">{{ order.baseDiscount|currency(order.currency) }}</span>
+				</td>
+				<td></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td><h2>{{ "Total Price"|t }}</h2></td>
+				<td>
+					<h2 class="right">{{ order.totalPrice|currency(order.currency) }}</h2>
+				</td>
+				<td></td>
+			</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<form id="order-actions" method="post" accept-charset="UTF-8">
+		<input type="hidden" name="action" value="">
+		<input type="hidden" name="redirect" value="">
+		{{ getCsrfInput() }}
+	<div class="footer">
+		{% if pdfUrl %}
+		<div class="btngroup right">
+			<a class="btn" href="{{ order.pdfUrl }}" target="_blank">{{ 'Download PDF'|t }}</a>
+		</div>
+		{% endif %}
+		<div class="btngroup">
+			<input type="button" class="btn formsubmit"
+				value="{{ 'Delete Order'|t }}"
+				data-action="commerce/orders/deleteOrder"
+				data-confirm="{{ 'Are you sure you want to delete this order? Please note, this does not refund the customer.'|t }}"
+				data-redirect="commerce/orders"
+				data-param="orderId"
+				data-value="{{ order.id }}">
+		</div>
+	</div>
+	</div>{# end pane #}
+	</form>
+
+
+	{% if orderSettings.getFieldLayout().getTabs()|length %}
+	<form id="order-form" method="post" accept-charset="UTF-8"
+		  data-saveshortcut
+		  data-saveshortcut-redirect="{{ order.cpEditUrl }}"
+		  data-confirm-unload>
+		<input type="hidden" name="action" value="commerce/orders/saveOrder">
+		<input type="hidden" name="redirect" value="commerce/orders">
+		{{ getCsrfInput() }}
+
+
+	{# Custom fields pane #}
+	<div id="fields" class="pane">
+		{% include "_includes/tabs" %}
+			{% if order.id %}<input type="hidden" name="orderId" value="{{ order.id }}">{% endif %}
+
+			{% for tab in orderSettings.getFieldLayout().getTabs() %}
+				<div id="tab{{ loop.index }}" {% if not loop.first %} class="hidden" {% endif %}>
+					{% include "_includes/fields" with {
+					fields: tab.getFields(),
+					element: order,
+					} only %}
+				</div>
+			{% endfor %}
+			<div class="footer">
+				<div class="btngroup right submit first">
+					<input type="submit" class="btn submit"
+						   value="{{ 'Save'|t }}">
+
+					<div class="btn submit menubtn"></div>
+					<div class="menu">
+						<ul>
+							<li><a class="formsubmit"
+								   data-redirect="{{ order.cpEditUrl }}">
+									{{ "Save and continue editing"|t }}
+									{{ forms.optionShortcutLabel('S') }}
+								</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+	</div>
+	{# End custom fields pane #}
+	</form>
+	{% endif %}
+
+	{% if order.histories|length %}
+	<div class="pane">
+		<h3>Order Status History</h3>
+
+		<table class="data fullwidth">
+			<thead>
+			<tr>
+				<th scope="col">{{ 'Order Status'|t }}</th>
+				<th scope="col">{{ 'Customer'|t }}</th>
+				<th scope="col">{{ 'Message'|t }}</th>
+				<th></th>
+			</tr>
+			</thead>
+			<tbody>
+			{% for orderHistory in order.histories %}
+				<tr data-id="{{ orderHistory.id }}">
+					<td>
+						{% if orderHistory.newStatus %}
+							<a href="{{ orderHistory.newStatus.cpEditUrl }}">{{ orderHistory.newStatus.htmlLabel()|raw }}</a> {% if loop.first %}({{ "Current"|t }}){% endif %}
+						{% endif %}
+					</td>
+					<td>
+						{% if orderHistory.customer.userId %}
+							<a href="{{ orderHistory.customer.user.cpEditUrl }}">{{ orderHistory.customer.user.friendlyName }}</a>
+						{% else %}
+							{{ orderHistory.order.email }}
+						{% endif %}
+					</td>
+					<td>{{ orderHistory.message }}</td>
+				</tr>
+			{% endfor %}
+			</tbody>
+		</table>
+	</div>
+	{% endif %}
+
+	{% if order.transactions|length %}
+	<div class="pane">
+
+		<h3>{{ "Transactions"|t }}</h3>
+
+		<table class="data fullwidth">
+			<thead>
+			<tr>
+				<th scope="col">{{ 'Type'|t }}</span></th>
+				<th scope="col">{{ 'Status'|t }}</th>
+				<th scope="col">{{ 'Message'|t }}</th>
+				<th scope="col">{{ 'Amount'|t }}</th>
+				<th scope="col">{{ 'Payment Method'|t }}</th>
+				<th scope="col">{{ 'Info'|t }}</th>
+				<th></th>
+			</tr>
+			</thead>
+			<tbody>
+			{% for transaction in order.transactions %}
+				<tr class="infoRow"
+					data-inforow='{% spaceless %}[
+					{"label":"Hash","attribute":"hash","currency":"false"},
+					{"label":"Reference","attribute":"reference","currency":"false"},
+					{"label":"Response","attribute":"response","currency":"false"}
+					]'{% endspaceless %}
+					data-hash="{{ transaction.hash }}"
+					data-reference="{{ transaction.reference }}"
+					data-response="{{ transaction.response }}"
+				>
+					<td>{{ transaction.type|title }}</td>
+					<td>{{ transaction.status|title }}</td>
+					<td>{{ transaction.message|title }}</td>
+					<td>{{ transaction.amount|currency(order.currency) }}</td>
+					<td>{{ transaction.paymentMethod.name }}</td>
+					<td><span class="tableRowInfo" data-icon="info" href="#"></span></td>
+					<td>
+						{% if transaction.canCapture() %}
+							<form>
+							<a class="small btn submit formsubmit"
+							   data-action="commerce/orders/transactionCapture"
+							   data-confirm="{{ 'Are you sure you want to capture this transaction?'|t }}"
+							   data-redirect="{{ order.cpEditUrl }}"
+							   data-param="id"
+							   data-value="{{ transaction.id }}">{{ 'Capture'|t }}</a>
+							</form>
+						{% endif %}
+						{% if transaction.canRefund() %}
+							<form>
+							<a class="small btn submit formsubmit"
+							   data-action="commerce/orders/transactionRefund"
+							   data-confirm="{{ 'Are you sure you want to refund this transaction?'|t }}"
+							   data-redirect="{{ order.cpEditUrl }}"
+							   data-param="id"
+							   data-value="{{ transaction.id }}">{{ 'Refund'|t }}</a>
+							</form>
+						{% endif %}
+					</td>
+				</tr>
+			{% endfor %}
+			</tbody>
+		</table>
+	</div>
+	{% endif %}
+{% endblock %}
+
+
+{% includeJsResource 'commerce/js/classes/TableRowAdditionalInfoIcon.js' %}
+{% includeJsResource 'commerce/js/classes/EditAddressModal.js' %}
+{% includeJsResource 'commerce/js/classes/UpdateOrderStatusModal.js' %}
+{% includeJsResource 'commerce/js/classes/OrderEdit.js' %}
+
+{% includejs %}
+
+//window.countries = JSON.parse('{{ craft.commerce.countriesList|json_encode|raw }}');
+//window.states = JSON.parse('{{ craft.commerce.statesArray|json_encode|raw }}');
+
+$(document).ready(function () {
+
+	new Craft.Commerce.OrderEdit({
+		orderId: {{ orderId|e('js') }}
+	});
+
+	$.each($('.tableRowInfo'), function () {
+		new Craft.Commerce.TableRowAdditionalInfoIcon(this);
+	});
+
+});
+
+
+{% endincludejs %}

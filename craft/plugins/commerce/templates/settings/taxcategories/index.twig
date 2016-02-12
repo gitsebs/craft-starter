@@ -1,0 +1,44 @@
+{% extends "commerce/_layouts/settings" %}
+
+
+{% block content %}
+    <h2>{{ "Tax Categories"|t }}</h2>
+
+    <table id="taxcategories" class="data fullwidth collapsible">
+        <thead>
+        <tr>
+            <th scope="col">{{ "Name"|t }}</th>
+            <th scope="col">{{ "Handle"|t }}</th>
+            <th scope="col">{{ "Description"|t }}</th>
+            <th scope="col">{{ "Default?"|t }}</th>
+            <td class="thin"></td>
+        </tr>
+        </thead>
+        <tbody>
+        {% for taxCategory in taxCategories %}
+            <tr data-id="{{ taxCategory.id }}" data-name="{{ taxCategory.name }}">
+                <th scope="row" data-title="{{ 'Name'|t }}"><a
+                            href="{{ url('commerce/settings/taxcategories/'~taxCategory.id) }}">{{ taxCategory.name }}</a>
+                </th>
+                <td data-title="{{ 'Handle'|t }}" class="code">{{ taxCategory.handle }}</td>
+                <td data-title="{{ 'Description'|t }}">{{ taxCategory.description }}</td>
+                <td data-title="{{ 'Default?'|t }}">{% if taxCategory.default %}<span data-icon="check" title="{{ 'Yes'|t }}"></span>{% endif %}</td>
+                <td class="thin"><a class="delete icon" title="{{ 'Delete'|t }}" role="button"></a></td>
+            </tr>
+        {% endfor %}
+
+        </tbody>
+    </table>
+
+    <div class="buttons">
+        <a href="{{ url('commerce/settings/taxcategories/new') }}" class="btn submit add icon">{{ 'New tax category'|t }}</a>
+    </div>
+{% endblock %}
+
+{% includejs %}
+var adminTable = new Craft.AdminTable({
+tableSelector: '#taxcategories',
+deleteAction: 'commerce/taxCategories/delete',
+minObjects: 1
+});
+{% endincludejs %}

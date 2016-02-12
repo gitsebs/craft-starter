@@ -329,6 +329,7 @@ return array(
     'PHPMailerOAuth' => $vendorDir . '/phpmailer/phpmailer/class.phpmaileroauth.php',
     'PHPMailerOAuthGoogle' => $vendorDir . '/phpmailer/phpmailer/class.phpmaileroauthgoogle.php',
     'POP3' => $vendorDir . '/phpmailer/phpmailer/class.pop3.php',
+    'PclZip' => $vendorDir . '/pclzip/pclzip/pclzip.lib.php',
     'SMTP' => $vendorDir . '/phpmailer/phpmailer/class.smtp.php',
     'SimplePie' => $vendorDir . '/simplepie/simplepie/library/SimplePie.php',
     'SimplePie_Author' => $vendorDir . '/simplepie/simplepie/library/SimplePie/Author.php',

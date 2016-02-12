@@ -1,0 +1,8 @@
+{% extends "_layouts/elementindex" %}
+{% hook 'commerce.prepCpTemplate' %}
+
+{% set title = "Orders"|t %}
+{% set docTitle = title~' - '~'Commerce' %}
+{% set elementType = 'Commerce_Order' %}
+{% set selectedTab = 'orders' %}
+{% set selectedSubnavItem = "orders" %}

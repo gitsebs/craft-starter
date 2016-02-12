@@ -1,6 +1,13 @@
-$red: #0f0;
-
 .home {
-  color: $red;
-  line-height: 2;
+  display: flex;
 }
+body {
+  background-color: #fff;
+  p {
+    font-family: sans-serif;
+  }
+}
+$red: red;
+
+
+@import './_layouts/home/home.scss';

@@ -1,0 +1,48 @@
+{% extends "commerce/_layouts/settings" %}
+
+
+{% block content %}
+    <h2>{{ "States"|t }}</h2>
+
+    <div id="no-states"{% if states|length %} class="hidden"{% endif %}>
+        <p>{{ "No states exist yet."|t }}</p>
+    </div>
+
+    {% if states|length %}
+    <table id="states" class="data fullwidth collapsible">
+        <thead>
+        <tr>
+            <th scope="col">{{ 'Name'|t }}</th>
+            <th scope="col">{{ 'Abbreviation'|t }}</th>
+            <th scope="col">{{ 'Country'|t }}</th>
+            <td class="thin"></td>
+        </tr>
+        </thead>
+        <tbody>
+        {% for state in states %}
+            <tr data-id="{{ state.id }}" data-name="{{ state.name }}">
+                <th scope="row" data-title="{{ 'Name'|t }}"><a
+                            href="{{ url('commerce/settings/states/'~state.id) }}">{{ state.name }}</a></th>
+                <td data-title="{{ 'ISO'|t }}">{{ state.abbreviation }}</td>
+                <td data-title="{{ 'Country Name'|t }}">{{ state.country.name }}</td>
+                <td class="thin"><a class="delete icon" title="{{ 'Delete'|t }}" role="button"></a></td>
+            </tr>
+        {% endfor %}
+
+        </tbody>
+    </table>
+    {% endif %}
+
+    <div class="buttons">
+        <a href="{{ url('commerce/settings/states/new') }}" class="btn submit add icon">{{ 'New state'|t }}</a>
+    </div>
+{% endblock %}
+
+
+{% includejs %}
+var adminTable = new Craft.AdminTable({
+tableSelector: '#states',
+noObjectsSelector: '#no-states',
+deleteAction: 'commerce/states/delete'
+});
+{% endincludejs %}

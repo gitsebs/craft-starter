@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node workflow/server.js",
-    "build": "node workflow/build.js"
+    "pm2": "pm2 start workflow/server.js -f --name='workflow'",
+    "logs": "pm2 logs workflow",
+    "build": "NODE_ENV=development node workflow/build.js",
+    "build/prod": "NODE_ENV=production node workflow/build.js"
   },
   "repository": {
     "type": "git",
@@ -58,6 +61,7 @@
     "imagemin-pngquant": "^4.2.0",
     "postcss-cssnext": "^2.3.0",
     "postcss-cssstats": "^1.0.0",
+    "postcss-devtools": "^1.0.0",
     "postcss-import": "^7.1.3",
     "postcss-partial-import": "^1.3.0",
     "postcss-reporter": "^1.3.0",

@@ -9,7 +9,7 @@ var config = require('../config'),
   precss = require('precss'),
   autoprefixer = require('autoprefixer');
 
-  var cssstats = require('postcss-cssstats');
+var chalk = require('chalk');
 
 var processors = [
   atImport({
@@ -19,7 +19,9 @@ var processors = [
   precss(),
   autoprefixer(config.autoprefixerOptions),
   cssnano(),
-  reporter()
+  reporter({
+    throwError:true
+  })
 ];
 
 function buildStyles(cb){
@@ -30,17 +32,19 @@ function buildStyles(cb){
       to: config.output.style,
       syntax: scss,
       map: {
-        inline: true
+        inline: process.env.NODE_ENV != 'production'
       }
     })
     .then(function (result) {
       fs.writeFile(config.output.style, result.css, function(){
         if (cb) cb(config.output.style)
         var size = fs.statSync(config.output.style)["size"]
-        console.log('bundle.css',size/1000+'kb');
+        console.log(chalk.grey('[CSS]'),chalk.green('bundle.css'),chalk.magenta(size/1000+'kb'));
       });
 
-    });
+    }).catch(function (error) {
+        console.warn(chalk.grey('[ERR]'),chalk.red(error.message));
+    });;
   })
 }
 module.exports = buildStyles;

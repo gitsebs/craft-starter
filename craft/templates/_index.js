@@ -1,2 +1,2 @@
-require('./test.js')
-console.log('hello world');
+//require('./test.js')
+// console.log('hello world');
